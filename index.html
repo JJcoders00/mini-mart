@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#79c9f2" />
+<meta name="description" content="Mini Mart 3D — grow crops, stock shelves, serve customers and build your dream shop. Free browser game for phone and desktop." />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Mini Mart 3D" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2379c9f2'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle'%3E🏪%3C/text%3E%3C/svg%3E" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2379c9f2'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle'%3E🏪%3C/text%3E%3C/svg%3E" />
+<link rel="manifest" href='data:application/manifest+json,{"name":"Mini Mart 3D","short_name":"Mini Mart","display":"fullscreen","orientation":"any","background_color":"%2379c9f2","theme_color":"%2379c9f2","start_url":"."}' />
+<title>Mini Mart 3D — Grow, Stock, Sell!</title>
+<style>
+  :root{
+    --ink:#2b2140; --ink-2:#4a3f66; --paper:#ffffff; --cream:#fff7ea;
+    --accent:#ffd93d; --accent-2:#ffb830; --green:#53c66f; --green-d:#1d6b3b; --red:#ff5d5d; --sky:#79c9f2;
+    --mint:#7ef7c0; --radius:20px; --shadow:0 10px 0 var(--ink), 0 20px 40px rgba(20,10,40,.35);
+    --st:env(safe-area-inset-top,0px); --sr:env(safe-area-inset-right,0px); --sb:env(safe-area-inset-bottom,0px); --sl:env(safe-area-inset-left,0px);
+    --fs-base:clamp(13px, 2.6vw, 16px);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--sky);
+    font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;font-size:var(--fs-base);
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;touch-action:none}
+  button{font-family:inherit}
+  #app{position:fixed;inset:0;width:100%;height:100%;height:100dvh}
+  #game{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+  .vignette{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 200px 40px rgba(20,10,40,.26)}
+  .hidden{display:none !important}
+
+  @keyframes popin{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1)}}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.16)}100%{transform:scale(1)}}
+  @keyframes shine{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  @keyframes fire{0%,100%{transform:scale(1) rotate(-1deg)}50%{transform:scale(1.05) rotate(1deg)}}
+  @keyframes toastin{0%{transform:translateY(-16px);opacity:0}100%{transform:none;opacity:1}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .popin{animation:popin .35s cubic-bezier(.2,1.4,.4,1) both}
+  .float{animation:floaty 2s ease-in-out infinite}
+  .bump{animation:bump .22s ease-out}
+  @media (prefers-reduced-motion:reduce){.popin,.float,.bump,.frenzy,.btn-primary::after,.toast{animation:none !important}}
+
+  /* ---------- HUD ---------- */
+  #hud{position:absolute;inset:0;pointer-events:none;z-index:10;
+    padding:calc(10px + var(--st)) calc(10px + var(--sr)) calc(10px + var(--sb)) calc(10px + var(--sl))}
+  .hud-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:8px}
+  .hud-left{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+  .hud-right{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+  .hud-center{display:flex;justify-content:center;padding-top:2px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(43,33,64,.86);border:3px solid #fff;border-radius:999px;color:#fff;
+    font-weight:800;box-shadow:0 4px 0 rgba(0,0,0,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:6px 12px;font-size:.95em;white-space:nowrap}
+  .chip i{width:1px;height:14px;background:rgba(255,255,255,.35);display:inline-block}
+  .chip.money{font-size:clamp(20px,5vw,28px);padding:8px 16px;background:linear-gradient(180deg,rgba(43,33,64,.92),rgba(28,80,50,.92))}
+  .chip.small{font-size:.85em;padding:5px 10px}
+  .chip.tiny{font-size:.72em;padding:3px 10px;opacity:.92}
+  .chip.star{background:linear-gradient(180deg,rgba(90,60,20,.92),rgba(43,33,64,.92))}
+  .lvl{padding:4px;gap:8px;width:clamp(150px,34vw,230px)}
+  .lvlnum{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--ink);font-weight:900;display:grid;place-items:center;font-size:14px;border:2px solid #fff}
+  .xp{flex:1;height:12px;border-radius:999px;background:rgba(0,0,0,.4);overflow:hidden;margin-right:6px}
+  .xp>div{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:999px;transition:width .2s}
+  .btnrow{display:flex;gap:8px;pointer-events:auto}
+  .ibtn{position:relative;width:46px;height:46px;border:4px solid var(--ink);border-radius:16px;background:#fff;color:var(--ink);font-size:20px;line-height:1;
+    box-shadow:0 5px 0 var(--ink);cursor:pointer;transition:transform .08s,box-shadow .08s;display:grid;place-items:center}
+  .ibtn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+  .dot{position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:var(--red);border:2px solid #fff}
+  .banners{position:absolute;left:0;right:0;top:calc(66px + var(--st));display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+  .frenzy{font-weight:900;color:#fff;border:3px solid #fff;border-radius:999px;white-space:nowrap;padding:6px 18px;font-size:clamp(15px,4vw,22px);
+    background:linear-gradient(180deg,#ff7a3c,#ff3d5a);box-shadow:0 4px 0 rgba(0,0,0,.35),0 0 24px rgba(255,90,40,.8);animation:fire .6s ease-in-out infinite}
+  .title{font-weight:900;color:#fff;-webkit-text-stroke:2px var(--ink);text-shadow:0 5px 0 var(--ink),0 10px 20px rgba(0,0,0,.3);letter-spacing:-.02em;line-height:1.05}
+  .brand{font-weight:900;letter-spacing:-.02em;-webkit-text-stroke:3px var(--ink);
+    background:linear-gradient(180deg,#fff 0%,var(--accent) 55%,#ff9e2c 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 6px 0 var(--ink)) drop-shadow(0 12px 16px rgba(0,0,0,.35))}
+  #tutWrap{position:absolute;left:50%;transform:translateX(-50%);width:min(92%,380px);bottom:calc(16px + var(--sb))}
+  .tut{background:linear-gradient(160deg,rgba(255,255,255,.97),rgba(255,247,234,.97));border:4px solid var(--ink);border-radius:18px;box-shadow:0 8px 0 var(--ink),0 16px 30px rgba(20,10,40,.3);
+    padding:10px 16px;text-align:center;font-weight:800;color:var(--ink);font-size:.95em}
+  #toasts{position:absolute;left:50%;transform:translateX(-50%);top:calc(120px + var(--st));display:flex;flex-direction:column;gap:6px;z-index:25;pointer-events:none;width:min(92%,420px);align-items:center}
+  .toast{background:rgba(43,33,64,.94);color:#fff;border:3px solid #fff;border-radius:14px;padding:8px 14px;font-weight:800;font-size:.9em;box-shadow:0 6px 0 rgba(0,0,0,.35);animation:toastin .25s ease-out;display:flex;gap:8px;align-items:center;max-width:100%}
+  .toast.good{background:linear-gradient(180deg,rgba(29,107,59,.95),rgba(43,33,64,.95))}
+  #joy{position:absolute;pointer-events:none;z-index:20}
+  #joy .base{width:var(--js,120px);height:var(--js,120px);border-radius:50%;border:5px solid rgba(255,255,255,.7);background:rgba(255,255,255,.2);box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  #joy .knob{position:absolute;width:calc(var(--js,120px)*.43);height:calc(var(--js,120px)*.43);border-radius:50%;background:#fff;border:5px solid var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.35)}
+
+  /* Minimap HUD overlay */
+  #minimap{width:90px;height:90px;border-radius:18px;border:3px solid #fff;background:rgba(43,33,64,.75);box-shadow:0 4px 0 rgba(0,0,0,.35);display:block;pointer-events:none}
+
+  /* Screens */
+  .screen{position:absolute;inset:0;display:grid;place-items:center;padding:12px;padding-top:calc(12px + var(--st));padding-bottom:calc(12px + var(--sb));overflow-y:auto;z-index:30;
+    background:rgba(43,33,64,.58);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);pointer-events:auto;touch-action:pan-y}
+  .screen.start{background:linear-gradient(180deg,rgba(43,33,64,.25),rgba(43,33,64,.7))}
+  #s-modal{z-index:40;background:rgba(20,10,40,.6)}
+  .card{width:min(100%,410px);background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(255,247,234,.98));border:4px solid var(--ink);border-radius:24px;box-shadow:var(--shadow);
+    padding:clamp(16px,4vw,28px);text-align:center;color:var(--ink);margin:auto}
+  .card h1{margin:4px 0 2px;font-size:clamp(40px,11vw,54px);line-height:1}
+  .card h2{margin:0 0 12px;font-size:clamp(30px,8vw,40px)}
+  .card h3{margin:0 0 8px;font-size:clamp(22px,6vw,28px)}
+  .sub{font-weight:700;opacity:.7;font-size:.95em;margin:0 0 14px}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:.72em;font-weight:700;margin-bottom:14px}
+  .grid4>div{background:#f3f7ff;border-radius:12px;padding:8px 4px;border:2px solid rgba(43,33,64,.1)}
+  .grid4 b{display:block;font-size:22px;margin-bottom:2px}
+  .note{background:#eafaf0;border:2px solid rgba(83,198,111,.4);border-radius:12px;padding:8px 12px;font-size:.82em;font-weight:700;color:var(--green-d);margin-bottom:14px}
+  .btn{width:100%;border:4px solid var(--ink);border-radius:18px;font-weight:900;letter-spacing:.02em;box-shadow:0 6px 0 var(--ink);transition:transform .08s,box-shadow .08s;cursor:pointer;
+    padding:14px 16px;font-size:clamp(17px,4.5vw,22px);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;min-height:52px}
+  .btn:active{transform:translateY(5px);box-shadow:0 1px 0 var(--ink)}
+  .btn:focus-visible{outline:4px solid var(--accent);outline-offset:2px}
+  .btn.sm{padding:10px 14px;font-size:1em;min-height:46px}
+  .btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:var(--ink);position:relative;overflow:hidden}
+  .btn-primary::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.65) 50%,transparent 70%);background-size:220% 100%;animation:shine 2.6s linear infinite;pointer-events:none}
+  .btn-secondary{background:#fff;color:var(--ink)}
+  .btn-danger{background:#fff0f0;color:#9b1c1c}
+  .btn small{font-weight:700;opacity:.7;font-size:.7em}
+  .hint{margin:4px 0 0;font-size:.75em;font-weight:700;opacity:.6}
+  .label{display:block;text-align:left;font-size:.72em;font-weight:900;text-transform:uppercase;letter-spacing:.08em;opacity:.6;margin:12px 0 4px}
+  .nameInput{width:100%;border:3px solid var(--ink);border-radius:12px;padding:10px 16px;font-weight:700;font-size:18px;text-align:center;outline:none;font-family:inherit;margin-bottom:12px;background:#fff;color:var(--ink)}
+  .nameInput:focus{box-shadow:0 0 0 4px var(--accent)}
+  .stats{display:flex;justify-content:space-around;margin-bottom:16px;font-weight:700}
+  .stats b{display:block;font-size:1.35em}
+  .stats span{font-size:.7em;opacity:.6}
+  .report{background:var(--ink);color:#fff;border-radius:16px;padding:16px;margin-bottom:16px}
+  .report .k{font-size:.72em;font-weight:900;letter-spacing:.1em;opacity:.7}
+  .report .v{font-size:clamp(36px,10vw,46px);font-weight:900;color:var(--mint);line-height:1.1}
+  .scores{border:2px solid rgba(43,33,64,.15);border-radius:12px;overflow:hidden;text-align:left}
+  .scoreRow{display:flex;align-items:center;gap:8px;padding:6px 12px;font-weight:700;font-size:.9em}
+  .scoreRow:nth-child(even){background:rgba(0,0,0,.05)}
+  .scoreRow.hl{background:#fde68a}
+  .scoreRow .r{width:24px;opacity:.6}.scoreRow .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.scoreRow .s{color:#047857;font-variant-numeric:tabular-nums}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:2px solid rgba(43,33,64,.08);text-align:left;font-weight:800}
+  .row:last-child{border-bottom:none}
+  .row .d{font-size:.75em;font-weight:700;opacity:.6;display:block}
+  .switch{position:relative;width:56px;height:32px;flex:none}
+  .switch input{opacity:0;width:0;height:0;position:absolute}
+  .switch span{position:absolute;inset:0;background:#cbd5e1;border:3px solid var(--ink);border-radius:999px;cursor:pointer;transition:.2s}
+  .switch span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;border-radius:50%;background:#fff;border:2px solid var(--ink);transition:.2s}
+  .switch input:checked+span{background:var(--green)}
+  .switch input:checked+span::before{transform:translateX(24px)}
+  .switch input:focus-visible+span{box-shadow:0 0 0 4px var(--accent)}
+  .seg{display:flex;border:3px solid var(--ink);border-radius:12px;overflow:hidden;flex:none}
+  .seg button{border:none;background:#fff;color:var(--ink);font-weight:800;padding:7px 10px;cursor:pointer;font-size:.85em;min-width:52px}
+  .seg button+button{border-left:3px solid var(--ink)}
+  .seg button.on{background:var(--accent)}
+  .mission{display:flex;gap:10px;align-items:center;text-align:left;background:#f3f7ff;border:2px solid rgba(43,33,64,.1);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+  .mission .ic{font-size:26px;flex:none}
+  .mission .t{flex:1;font-weight:800;font-size:.95em}
+  .mission .bar{height:8px;border-radius:999px;background:rgba(0,0,0,.12);overflow:hidden;margin-top:6px}
+  .mission .bar>div{height:100%;background:linear-gradient(90deg,var(--green),#7ef7c0);border-radius:999px}
+  .mission .rw{font-weight:900;color:var(--green-d);flex:none;font-size:.9em}
+  .mission.done{background:#eafaf0;border-color:rgba(83,198,111,.5)}
+  .spinner{width:44px;height:44px;border:5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+  .ver{position:absolute;bottom:calc(6px + var(--sb));right:calc(10px + var(--sr));font-size:10px;font-weight:700;color:rgba(255,255,255,.55);z-index:31;pointer-events:none}
+
+  /* Wardrobe styles */
+  .outfitGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+  .outfitCard{background:#f3f7ff;border:3px solid rgba(43,33,64,.15);border-radius:16px;padding:12px;cursor:pointer;text-align:center;font-weight:800;transition:.15s}
+  .outfitCard:hover{border-color:var(--accent)}
+  .outfitCard.active{background:#fff8db;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent)}
+  .outfitCard.locked{opacity:.5;filter:grayscale(.7);cursor:not-allowed}
+  .outfitIcon{font-size:32px;margin-bottom:4px}
+  .outfitName{font-size:.95em}
+  .outfitReq{font-size:.72em;opacity:.7;margin-top:2px}
+
+  @media (max-height:480px) and (orientation:landscape){
+    .chip.money{font-size:20px;padding:5px 12px}.lvl{width:150px}.ibtn{width:40px;height:40px;font-size:17px}
+    .banners{top:calc(52px + var(--st))}#toasts{top:calc(100px + var(--st))}
+    .card{padding:14px}.card h1{font-size:34px}.btn{padding:10px 14px;min-height:44px;margin-bottom:8px}.grid4{margin-bottom:8px}.note{margin-bottom:8px}
+    #minimap{width:70px;height:70px}
+  }
+  @media (max-width:360px){.hud-center .lvl{width:120px}.chip.small{font-size:.75em}#minimap{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="game"></canvas>
+  <div class="vignette"></div>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden" aria-live="polite">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div id="moneyChip" class="chip money"><span aria-hidden="true">💵</span><span id="moneyTxt">$0</span></div>
+        <div id="starChip" class="chip small star hidden">⭐ <span id="starTxt">0</span><i></i>+<span id="starPct">0</span>%</div>
+        <div class="chip small"><span id="carryIcon" aria-hidden="true">🎒</span><span id="carryTxt">0/8</span><i></i><span>🛒 <span id="servedTxt">0</span></span></div>
+        <canvas id="minimap" width="90" height="90" aria-label="Minimap"></canvas>
+      </div>
+      <div class="hud-center"><div class="chip lvl"><div id="lvlNum" class="lvlnum">1</div><div class="xp"><div id="xpBar"></div></div></div></div>
+      <div class="hud-right">
+        <div class="btnrow">
+          <button id="wardrobeBtn" class="ibtn" aria-label="Outfits">👔</button>
+          <button id="missionsBtn" class="ibtn" aria-label="Goals">🎯<span id="missionDot" class="dot hidden"></span></button>
+          <button id="pauseBtn" class="ibtn" aria-label="Pause">⏸</button>
+        </div>
+        <div class="chip tiny">🏆 <span id="bestTxt">0</span></div>
+      </div>
+    </div>
+    <div class="banners">
+      <div id="frenzyBanner" class="hidden"><div class="frenzy">🔥 MEGA SALE 2X · <span id="frenzyTime">20</span>s</div></div>
+      <div id="comboBanner" class="hidden"><div class="title popin" style="font-size:clamp(22px,7vw,34px);color:#6ee7b7">COMBO x<span id="comboNum">0</span></div></div>
+      <div id="unlockBanner" class="hidden" style="text-align:center"><div class="title popin" style="font-size:clamp(18px,5vw,24px);color:#fde047">UNLOCKED</div><div id="unlockName" class="title popin" style="font-size:clamp(24px,7vw,34px)"></div></div>
+    </div>
+    <div id="tutWrap" class="hidden"><div id="tutTxt" class="tut popin float"></div></div>
+  </div>
+  <div id="toasts"></div>
+  <div id="joy" class="hidden"><div class="base"></div><div class="knob" id="joyKnob"></div></div>
+
+  <!-- LOADER -->
+  <div id="s-loader" class="screen start"><div style="text-align:center;color:#fff;font-weight:900"><div class="spinner"></div>Loading Mini Mart…</div></div>
+
+  <!-- START -->
+  <div id="s-start" class="screen start hidden">
+    <div class="card popin">
+      <div style="font-size:clamp(44px,12vw,60px)" class="float" aria-hidden="true">🏪</div>
+      <h1 class="brand">MINI MART</h1>
+      <p class="sub">Pick · Stock · Sell · Upgrade forever</p>
+      <div id="saveSummary" class="note hidden"></div>
+      <div class="grid4">
+        <div><b>🍅</b>Pick crops</div><div><b>🧺</b>Fill shelves</div><div><b>💵</b>Ring up</div><div><b>⭐</b>Upgrade</div>
+      </div>
+      <label class="label" for="nameInput">Your name</label>
+      <input id="nameInput" class="nameInput" maxlength="14" placeholder="Shopkeeper" autocomplete="off" autocapitalize="words" enterkeyhint="go" />
+      <button id="continueBtn" class="btn btn-primary hidden">▶ CONTINUE SHOP</button>
+      <button id="startBtn" class="btn btn-primary">▶ OPEN SHOP</button>
+      <button id="newBtn" class="btn btn-secondary sm hidden">🆕 Start a new shop</button>
+      <button id="wardrobeBtn1" class="btn btn-secondary sm">👔 Outfits</button>
+      <button id="settingsBtn1" class="btn btn-secondary sm">⚙️ Settings</button>
+      <p class="hint">Drag anywhere to move · WASD / Arrows on desktop · P to pause</p>
+      <div id="startScoresWrap" class="hidden"><div class="label">🏆 Top shopkeepers</div><div id="startScores" class="scores"></div></div>
+    </div>
+  </div>
+
+  <!-- PAUSE -->
+  <div id="s-pause" class="screen hidden">
+    <div class="card popin" style="width:min(100%,360px)">
+      <h2 class="title">PAUSED</h2>
+      <div class="stats"><div><b id="pEarned">$0</b><span>EARNED</span></div><div><b id="pLevel">1</b><span>LEVEL</span></div><div><b id="pServed">0</b><span>SERVED</span></div></div>
+      <button id="resumeBtn" class="btn btn-primary">▶ RESUME</button>
+      <button id="wardrobeBtn2" class="btn btn-secondary sm">👔 Outfits</button>
+      <button id="missionsBtn2" class="btn btn-secondary sm">🎯 Goals</button>
+      <button id="settingsBtn2" class="btn btn-secondary sm">⚙️ Settings</button>
+      <button id="cashoutBtn" class="btn btn-secondary sm">🏁 Cash out &amp; earn ⭐ stars</button>
+      <p class="hint">Progress auto-saves. Close the tab anytime.</p>
+    </div>
+  </div>
+
+  <!-- WARDROBE -->
+  <div id="s-wardrobe" class="screen hidden">
+    <div class="card popin" style="width:min(100%,390px)">
+      <h3 class="title">WARDROBE</h3>
+      <p class="sub" style="margin-bottom:12px">Unlock fresh uniforms as your mart grows!</p>
+      <div id="outfitList" class="outfitGrid"></div>
+      <button id="wardrobeBack" class="btn btn-primary" style="margin-top:6px">✓ DONE</button>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="s-settings" class="screen hidden">
+    <div class="card popin" style="width:min(100%,380px)">
+      <h3 class="title">SETTINGS</h3>
+      <div class="row"><div>Sound<span class="d">Effects &amp; jingles</span></div><label class="switch"><input type="checkbox" id="optSound"><span></span></label></div>
+      <div class="row"><div>Vibration<span class="d">Haptic feedback (phones)</span></div><label class="switch"><input type="checkbox" id="optHaptics"><span></span></label></div>
+      <div class="row"><div>Screen shake<span class="d">Camera punch on big moments</span></div><label class="switch"><input type="checkbox" id="optShake"><span></span></label></div>
+      <div class="row"><div>Minimap<span class="d">Live radar on HUD</span></div><label class="switch"><input type="checkbox" id="optMap"><span></span></label></div>
+      <div class="row"><div>Graphics<span class="d">Auto adapts to your device</span></div><div class="seg" id="optQuality"><button data-v="low">Low</button><button data-v="auto">Auto</button><button data-v="high">High</button></div></div>
+      <div class="row"><div>Camera zoom</div><div class="seg" id="optZoom"><button data-v="near">Near</button><button data-v="normal">Normal</button><button data-v="far">Far</button></div></div>
+      <div class="row"><div>Joystick size</div><div class="seg" id="optJoy"><button data-v="normal">Normal</button><button data-v="large">Large</button></div></div>
+      <button id="settingsBack" class="btn btn-primary" style="margin-top:14px">✓ DONE</button>
+      <button id="resetBtn" class="btn btn-danger sm">🗑 Erase all data</button>
+    </div>
+  </div>
+
+  <!-- MISSIONS -->
+  <div id="s-missions" class="screen hidden">
+    <div class="card popin" style="width:min(100%,380px)">
+      <h3 class="title">GOALS</h3>
+      <p class="sub" style="margin-bottom:10px">Complete goals for bonus cash 💰</p>
+      <div id="missionList"></div>
+      <button id="missionsBack" class="btn btn-primary" style="margin-top:8px">✓ BACK</button>
+    </div>
+  </div>
+
+  <!-- REPORT / GAME OVER -->
+  <div id="s-over" class="screen hidden">
+    <div class="card popin">
+      <div style="font-size:48px" aria-hidden="true">🎉</div>
+      <h2 class="title">FRANCHISE REPORT</h2>
+      <div class="report">
+        <div class="k">TOTAL EARNED</div><div id="overEarned" class="v">$0</div>
+        <div id="overStats" style="font-size:.9em;font-weight:700;opacity:.85;margin-top:4px"></div>
+        <div id="overStars" style="margin-top:8px;font-weight:900;color:#fde047"></div>
+        <div id="overRank" class="hidden" style="margin-top:6px;font-weight:900"></div>
+      </div>
+      <button id="againBtn" class="btn btn-primary">🆕 OPEN A NEW SHOP</button>
+      <div class="label">🏆 High scores</div><div id="overScores" class="scores"></div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div id="s-modal" class="screen hidden" role="dialog" aria-modal="true">
+    <div class="card popin" style="width:min(100%,360px)">
+      <div id="mIcon" style="font-size:44px" aria-hidden="true"></div>
+      <h3 id="mTitle" class="title"></h3>
+      <div id="mBody" style="font-weight:700;margin-bottom:14px;line-height:1.4"></div>
+      <div id="mBtns"></div>
+    </div>
+  </div>
+
+  <!-- FATAL -->
+  <div id="s-fatal" class="screen hidden">
+    <div class="card"><div style="font-size:44px">😵</div><h3 class="title">Can't start the game</h3>
+      <div id="fatalMsg" style="font-weight:700;margin-bottom:12px"></div>
+      <button class="btn btn-primary" onclick="location.reload()">↻ Try again</button></div>
+  </div>
+  <div class="ver">v2.1 · AAA</div>
+</div>
+
+<script type="module">
+/* ====================================================================
+   Mini Mart 3D — v2.1  (single-file production AAA build)
+   Features: Minimap · Wardrobe / Skins · Customer emotes & carts ·
+   Helper porter bot · Wind-blown farm stalks · Day/night cycle ·
+   Fixed-timestep 60Hz · Save w/ offline earnings · Prestige stars ·
+   Missions · Auto-quality · CDN failover · Crash-proof
+   ==================================================================== */
+const $ = (id) => document.getElementById(id);
+const VERSION = '2.1.0';
+const KEYS = {
+  save: 'minimart3d_save_v2',
+  scores: 'minimart3d_scores_v1',
+  settings: 'minimart3d_settings_v1',
+  name: 'minimart3d_name_v1',
+  outfit: 'minimart3d_outfit_v1'
+};
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- storage (safe) ---------- */
+const store = {
+  get(k, d) { try { const r = localStorage.getItem(k); return r == null ? d : JSON.parse(r); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+};
+const settings = Object.assign({ sound: true, haptics: true, shake: true, map: true, quality: 'auto', zoom: 'normal', joy: 'normal' }, store.get(KEYS.settings, {}));
+const saveSettings = () => store.set(KEYS.settings, settings);
+
+/* ---------- outfits / skins ---------- */
+const OUTFITS = [
+  { id: 'classic', name: 'Classic Blue', icon: '🧢', body: 0x4aa3ff, cap: 0xff5d5d, req: 'Default' },
+  { id: 'emerald', name: 'Emerald Grocer', icon: '🍃', body: 0x22c55e, cap: 0x15803d, req: 'Level 2', check: (g) => g.level >= 2 },
+  { id: 'sunshine', name: 'Sunshine Yellow', icon: '☀️', body: 0xfacc15, cap: 0xea580c, req: 'Earn $1K', check: (g) => g.earned >= 1000 },
+  { id: 'neon', name: 'Neon Cyber', icon: '⚡', body: 0xa855f7, cap: 0x06b6d4, req: 'Level 5', check: (g) => g.level >= 5 },
+  { id: 'tuxedo', name: 'VIP Tuxedo', icon: '🎩', body: 0x1e293b, cap: 0x0f172a, req: '⭐ 1+ Star', check: (g) => g.stars >= 1 },
+  { id: 'golden', name: 'Pure Gold', icon: '👑', body: 0xf59e0b, cap: 0xfef08a, req: 'Earn $50K', check: (g) => g.earned >= 50000 },
+];
+let currentOutfit = store.get(KEYS.outfit, 'classic');
+
+/* ---------- utils ---------- */
+function money(n) { n = Math.max(0, Math.floor(Number(n) || 0)); if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B'; if (n >= 1e6) return (n / 1e6).toFixed(n < 1e7 ? 2 : 1) + 'M'; if (n >= 1e4) return (n / 1e3).toFixed(1) + 'K'; return n.toLocaleString(); }
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function buzz(p) { if (!settings.haptics || !navigator.vibrate) return; try { navigator.vibrate(p); } catch (e) {} }
+function setText(el, v) { v = String(v); if (el.__t !== v) { el.__t = v; el.textContent = v; } }
+function retrigger(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+function fmtTime(sec) { sec = Math.floor(sec); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60); if (h) return `${h}h ${m}m`; if (m) return `${m}m`; return `${sec}s`; }
+
+/* ---------- toasts ---------- */
+function toast(text, icon = '', good = false) {
+  const box = $('toasts'); const el = document.createElement('div'); el.className = 'toast' + (good ? ' good' : '');
+  el.innerHTML = (icon ? `<span>${icon}</span>` : '') + `<span>${escapeHtml(text)}</span>`;
+  box.appendChild(el); while (box.children.length > 3) box.removeChild(box.firstChild);
+  setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); }, 2600);
+}
+
+/* ---------- modal ---------- */
+function modal({ icon = '', title = '', body = '', buttons = [] }) {
+  $('mIcon').textContent = icon; $('mTitle').textContent = title; $('mBody').innerHTML = body;
+  const wrap = $('mBtns'); wrap.innerHTML = '';
+  for (const b of buttons) { const btn = document.createElement('button'); btn.className = 'btn ' + (b.primary ? 'btn-primary' : b.danger ? 'btn-danger sm' : 'btn-secondary sm'); btn.innerHTML = b.label;
+    btn.onclick = () => { $('s-modal').classList.add('hidden'); b.onClick && b.onClick(); }; wrap.appendChild(btn); }
+  $('s-modal').classList.remove('hidden');
+}
+
+/* ---------- sound ---------- */
+const sfx = (() => {
+  let ctx = null, master = null;
+  function resume() { try { if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; ctx = new AC(); master = ctx.createGain(); master.gain.value = .32; master.connect(ctx.destination); } if (ctx.state === 'suspended') ctx.resume(); } catch (e) {} }
+  function tone(f, d, type, vol = 1, slide = 0, delay = 0) { if (!ctx || !master || !settings.sound) return; try {
+    const t0 = ctx.currentTime + delay, o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; const f0 = Math.max(40, f); o.frequency.setValueAtTime(f0, t0);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, f0 + slide), t0 + Math.max(.02, d));
+    g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(Math.max(.0001, .26 * vol), t0 + .012); g.gain.exponentialRampToValueAtTime(.0001, t0 + Math.max(.03, d));
+    o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + d + .03); } catch (e) {} }
+  return { resume,
+    pick: (n = 0) => tone(480 + (n % 6) * 55, .09, 'triangle', .7, 240), stock: () => tone(300, .07, 'square', .3, 120),
+    coin: () => { tone(880, .07, 'square', .35); tone(1320, .1, 'square', .28, 0, .05); }, sale: () => { tone(660, .09, 'triangle', .55); tone(990, .13, 'triangle', .45, 0, .07); },
+    unlock: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, .2, 'triangle', .65, 0, i * .08)), levelUp: () => [659, 784, 988, 1318].forEach((f, i) => tone(f, .24, 'triangle', .5, 0, i * .07)),
+    mission: () => [784, 988, 1175].forEach((f, i) => tone(f, .18, 'triangle', .6, 0, i * .09)), ui: () => tone(520, .06, 'square', .3, 180) };
+})();
+
+/* ---------- scores ---------- */
+function loadScores() { const d = store.get(KEYS.scores, []); if (!Array.isArray(d)) return [];
+  return d.filter((e) => e && typeof e.score === 'number' && typeof e.name === 'string')
+    .map((e) => ({ name: String(e.name).slice(0, 14), score: Math.max(0, Math.round(e.score)), served: Math.max(0, Math.round(e.served || 0)), date: e.date || 0 }))
+    .sort((a, b) => b.score - a.score || b.date - a.date).slice(0, 10); }
+function saveScore(e) { const entry = { name: (e.name || 'Shopkeeper').trim().slice(0, 14) || 'Shopkeeper', score: Math.max(0, Math.round(e.score)), served: Math.max(0, Math.round(e.served)), date: Date.now() };
+  const list = [...loadScores(), entry].sort((a, b) => b.score - a.score || b.date - a.date).slice(0, 10); store.set(KEYS.scores, list);
+  return { list, rank: list.findIndex((s) => s.date === entry.date && s.score === entry.score && s.name === entry.name) }; }
+let bestCache = (loadScores()[0] || { score: 0 }).score;
+function renderScores(el, list, hl = -1) { if (!list.length) { el.innerHTML = '<div class="scoreRow" style="opacity:.5">No scores yet — be the first!</div>'; return; }
+  el.innerHTML = list.map((s, i) => `<div class="scoreRow${i === hl ? ' hl' : ''}"><span class="r">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</span><span class="n">${escapeHtml(s.name)}</span><span style="opacity:.5;font-size:.8em">${s.served}🛒</span><span class="s">$${money(s.score)}</span></div>`).join(''); }
+
+/* ---------- event bus ---------- */
+const bus = { m: new Map(), on(t, f) { (this.m.get(t) || this.m.set(t, []).get(t)).push(f); }, emit(t, p) { const l = this.m.get(t); if (l) for (const f of l) { try { f(p); } catch (e) { console.error(e); } } } };
+
+/* ---------- global error safety net ---------- */
+let errToasted = false;
+window.addEventListener('error', (e) => { console.error(e.error || e.message); if (!errToasted) { errToasted = true; toast('Hiccup detected — game kept running', '⚠️'); } });
+window.addEventListener('unhandledrejection', (e) => { console.error(e.reason); });
+
+/* ====================================================================
+   BOOT: load Three.js with CDN failover
+   ==================================================================== */
+const CDNS = ['https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js', 'https://unpkg.com/three@0.160.0/build/three.module.js', 'https://esm.sh/three@0.160.0'];
+async function loadThree() { let err; for (const u of CDNS) { try { return await import(u); } catch (e) { err = e; } } throw err || new Error('CDN unreachable'); }
+function fatal(msg) { $('s-loader').classList.add('hidden'); $('fatalMsg').textContent = msg; $('s-fatal').classList.remove('hidden'); }
+(function boot() {
+  const test = document.createElement('canvas'); const gl = test.getContext('webgl2') || test.getContext('webgl') || test.getContext('experimental-webgl');
+  if (!gl) { fatal('Your browser does not support WebGL. Try Chrome, Safari, Edge or Firefox.'); return; }
+  loadThree().then((THREE) => { try { run(THREE); } catch (e) { console.error(e); fatal('Startup error: ' + (e && e.message ? e.message : e)); } })
+    .catch((e) => { console.error(e); fatal('Could not download the 3D engine. Check your internet connection and reload.'); });
+})();
+
+/* ====================================================================
+   GAME
+   ==================================================================== */
+function run(THREE) {
+  const KINDS = [
+    { name: 'Tomato', emoji: '🍅', color: 0xf0413c, leaf: 0x4fb356, price: 6, grow: 4, baseGrow: 4 },
+    { name: 'Corn', emoji: '🌽', color: 0xffc93c, leaf: 0x66c25c, price: 16, grow: 6, baseGrow: 6 },
+    { name: 'Melon', emoji: '🍉', color: 0x3fbf5f, leaf: 0x2f9e4f, price: 42, grow: 8, baseGrow: 8 },
+  ];
+  const XP_FOR = (lv) => Math.round(45 * Math.pow(1.42, lv - 1));
+  const BX0 = -14.5, BX1 = 12.5, BZ0 = -8.4, BZ1 = 10.4, STEP = 1 / 60;
+  const PAD_DEFS = [
+    { id: 't2', label: '+2 Tomato Plots', cost: 30, x: -10.6, z: -.1 },
+    { id: 'bag1', label: 'Bigger Backpack', cost: 80, x: 4.5, z: 8.2, req: 't2' },
+    { id: 't3', label: '+4 Tomato Plots', cost: 140, x: -5.6, z: -4.1, req: 'bag1' },
+    { id: 'corn', label: 'Corn Field', cost: 260, x: -6.2, z: 2.2, req: 't3' },
+    { id: 'cashier', label: 'Hire Cashier', cost: 450, x: 11.4, z: 3.5, req: 'corn' },
+    { id: 'boots', label: 'Speed Boots', cost: 700, x: 6.6, z: 6.6, req: 'cashier' },
+    { id: 'corn2', label: '+6 Corn Plots', cost: 1100, x: -6.2, z: 4.6, req: 'boots' },
+    { id: 'bag2', label: 'Huge Backpack', cost: 1700, x: 4.5, z: 6.4, req: 'corn2' },
+    { id: 'fert', label: 'Fertilizer', cost: 2000, x: -6.2, z: -6, req: 'bag2' },
+    { id: 'melon', label: 'Melon Field', cost: 3000, x: -6.2, z: 8.4, req: 'fert' },
+    { id: 'cashier2', label: 'Pro Cashier', cost: 4500, x: 11.4, z: 1.6, req: 'melon' },
+    { id: 'melon2', label: '+3 Melon Plots', cost: 6000, x: -6.2, z: 10.2, req: 'cashier2' },
+    { id: 'bag3', label: 'Mega Backpack', cost: 8500, x: 4.5, z: 4.6, req: 'melon2' },
+    { id: 'boots2', label: 'Rocket Boots', cost: 12000, x: 6.6, z: -7, req: 'bag3' },
+  ];
+  const MISSION_TYPES = [
+    { type: 'serve', icon: '🛒', label: (n) => `Serve ${n} customers`, goal: (t) => 8 + t * 6 },
+    { type: 'earn', icon: '💵', label: (n) => `Earn $${money(n)}`, goal: (t, lv) => Math.round((150 + t * 120) * (1 + lv * .3)) },
+    { type: 'harvest', icon: '🌱', label: (n) => `Harvest ${n} crops`, goal: (t) => 20 + t * 15 },
+    { type: 'personal', icon: '🧾', label: (n) => `Ring up ${n} sales yourself`, goal: (t) => 5 + t * 4 },
+    { type: 'unlock', icon: '⭐', label: (n) => `Buy ${n} upgrade${n > 1 ? 's' : ''}`, goal: (t) => 1 + Math.min(2, Math.floor(t / 2)) },
+    { type: 'combo', icon: '🔥', label: (n) => `Reach combo x${n}`, goal: (t) => 3 + Math.min(5, t) },
+  ];
+
+  /* ---------- material / texture helpers ---------- */
+  const matCache = new Map();
+  const stdMat = (c) => { let m = matCache.get(c); if (!m) { m = new THREE.MeshStandardMaterial({ color: c, roughness: .75, metalness: .03 }); matCache.set(c, m); } return m; };
+  const box = (w, h, d, c, shadow = true) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), stdMat(c)); m.castShadow = shadow; m.receiveShadow = true; return m; };
+  const ringMesh = (r, c) => { const m = new THREE.Mesh(new THREE.RingGeometry(r - .14, r, 28), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: .3, side: THREE.DoubleSide, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.y = .03; return m; };
+  const FONT = '"Segoe UI", system-ui, -apple-system, sans-serif';
+  function fitFont(ctx, text, max, size, min) { ctx.font = `bold ${size}px ${FONT}`; while (size > min && ctx.measureText(text).width > max) { size -= 3; ctx.font = `bold ${size}px ${FONT}`; } }
+  function drawBubble(ctx, text, sub) {
+    ctx.clearRect(0, 0, 320, 160); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+    const h = sub ? 140 : 96; ctx.fillStyle = 'rgba(255,255,255,.97)'; ctx.strokeStyle = '#2b2140'; ctx.lineWidth = 8;
+    if (typeof ctx.roundRect === 'function') { ctx.beginPath(); ctx.roundRect(10, 8, 300, h, 28); ctx.fill(); ctx.stroke(); } else { ctx.fillRect(10, 8, 300, h); ctx.strokeRect(10, 8, 300, h); }
+    fitFont(ctx, text, 270, 52, 22); ctx.fillStyle = '#2b2140'; ctx.fillText(text, 160, 8 + (sub ? 46 : h / 2));
+    if (sub) { fitFont(ctx, sub, 270, 44, 20); ctx.fillStyle = '#189a50'; ctx.fillText(sub, 160, 112); }
+  }
+  const staticCache = new Map(), floatCache = new Map();
+  function cacheGet(map, key, make, limit = 0) { let t = map.get(key); if (t) return t; if (limit && map.size >= limit) { const first = map.keys().next().value; map.delete(first); } t = make(); t.colorSpace = THREE.SRGBColorSpace; map.set(key, t); return t; }
+  const bubbleTex = (text, sub) => cacheGet(staticCache, 'b|' + text + '|' + (sub ?? ''), () => { const cv = document.createElement('canvas'); cv.width = 320; cv.height = 160; drawBubble(cv.getContext('2d'), text, sub); return new THREE.CanvasTexture(cv); });
+  const iconTex = (text, color = '#fff', size = 90) => cacheGet(staticCache, 'i|' + text + color + size, () => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const x = cv.getContext('2d'); x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `bold ${size}px ${FONT}`; x.lineWidth = 12; x.lineJoin = 'round'; x.strokeStyle = 'rgba(43,33,64,.85)'; x.strokeText(text, 64, 68); x.fillStyle = color; x.fillText(text, 64, 68); return new THREE.CanvasTexture(cv); });
+  const floatTex = (text, color) => cacheGet(floatCache, 'f|' + text + color, () => { const cv = document.createElement('canvas'); cv.width = 512; cv.height = 128; const x = cv.getContext('2d'); x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round'; fitFont(x, text, 480, 66, 26); x.lineWidth = 12; x.strokeStyle = 'rgba(30,20,50,.92)'; x.strokeText(text, 256, 66); x.fillStyle = color; x.fillText(text, 256, 66); return new THREE.CanvasTexture(cv); }, 160);
+  class DynLabel { constructor() { this.c = document.createElement('canvas'); this.c.width = 320; this.c.height = 160; this.ctx = this.c.getContext('2d'); this.tex = new THREE.CanvasTexture(this.c); this.tex.colorSpace = THREE.SRGBColorSpace; this.last = ''; }
+    draw(text, sub) { const k = text + '|' + sub; if (k === this.last) return; this.last = k; drawBubble(this.ctx, text, sub); this.tex.needsUpdate = true; } }
+  const sprite = (tex, w, h) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false })); s.scale.set(w, h, 1); s.renderOrder = 9; return s; };
+  const setSpriteMap = (s, tex) => { s.material.map = tex; s.material.needsUpdate = true; };
+  let blobTex = null;
+  function blobShadow(size) { if (!blobTex) { const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d'); const g = x.createRadialGradient(32, 32, 2, 32, 32, 30); g.addColorStop(0, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); blobTex = new THREE.CanvasTexture(cv); }
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.y = .04; m.renderOrder = 1; return m; }
+  const eyeM = new THREE.MeshStandardMaterial({ color: 0x2b2140, roughness: .4 }); const whiteM = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  function makePerson(color) { const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.CapsuleGeometry(.37, .62, 6, 14), new THREE.MeshStandardMaterial({ color, roughness: .6, metalness: .02 })); body.position.y = .78; body.castShadow = true; g.add(body);
+    for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.062, 10, 10), eyeM); e.position.set(s * .13, 1.14, .31); g.add(e); const sh = new THREE.Mesh(new THREE.SphereGeometry(.02, 6, 6), whiteM); sh.position.set(s * .11, 1.17, .36); g.add(sh); } return { g, body }; }
+
+  /* ---------- input ---------- */
+  class Input {
+    constructor(el) { this.el = el; this.keys = new Set(); this.enabled = false; this.touchActive = false; this.touchId = -1; this.origin = { x: 0, y: 0 }; this.vec = { x: 0, y: 0 }; this.onPause = null; this.onJoystick = null;
+      window.addEventListener('keydown', this.kd); window.addEventListener('keyup', this.ku); el.addEventListener('pointerdown', this.pd, { passive: false });
+      window.addEventListener('pointermove', this.pm, { passive: false }); window.addEventListener('pointerup', this.pu); window.addEventListener('pointercancel', this.pu); window.addEventListener('blur', this.clear); }
+    get R() { return settings.joy === 'large' ? 62 : 48; }
+    kd = (e) => { const tag = e.target && e.target.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') { if (!e.repeat) this.onPause && this.onPause(); return; }
+      if (!this.enabled) return; if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); if (e.repeat) return; this.keys.add(e.key.toLowerCase()); };
+    ku = (e) => { this.keys.delete(e.key.toLowerCase()); };
+    pd = (e) => { if (!this.enabled || e.button !== 0 || this.touchActive) return; e.preventDefault(); try { this.el.setPointerCapture(e.pointerId); } catch (x) {}
+      this.touchActive = true; this.touchId = e.pointerId; this.origin = { x: e.clientX, y: e.clientY }; this.vec = { x: 0, y: 0 }; this.onJoystick && this.onJoystick(true, e.clientX, e.clientY, 0, 0); };
+    pm = (e) => { if (!this.touchActive || e.pointerId !== this.touchId) return; e.preventDefault(); const R = this.R; let dx = e.clientX - this.origin.x, dy = e.clientY - this.origin.y, len = Math.hypot(dx, dy);
+      if (len > R * 1.8) { const k = (len - R) / len; this.origin.x += dx * k * .55; this.origin.y += dy * k * .55; dx = e.clientX - this.origin.x; dy = e.clientY - this.origin.y; len = Math.hypot(dx, dy); }
+      const s = len > R ? R / len : 1; this.vec = { x: dx * s / R, y: dy * s / R }; this.onJoystick && this.onJoystick(true, this.origin.x, this.origin.y, dx * s, dy * s); };
+    pu = (e) => { if (e.pointerId !== this.touchId) return; try { this.el.releasePointerCapture(e.pointerId); } catch (x) {} this.clear(); };
+    clear = () => { this.keys.clear(); this.touchActive = false; this.touchId = -1; this.vec = { x: 0, y: 0 }; this.onJoystick && this.onJoystick(false, 0, 0, 0, 0); };
+    axis() { if (!this.enabled) return { x: 0, y: 0 }; let x = 0, y = 0; const k = this.keys;
+      if (k.has('a') || k.has('arrowleft')) x--; if (k.has('d') || k.has('arrowright')) x++; if (k.has('w') || k.has('arrowup')) y++; if (k.has('s') || k.has('arrowdown')) y--;
+      if (x || y) { const l = Math.hypot(x, y) || 1; return { x: x / l, y: y / l }; }
+      if (this.touchActive) { const v = this.vec, l = Math.hypot(v.x, v.y); if (l < .15) return { x: 0, y: 0 }; const m = Math.min(1, (l - .15) / .85), c = m * m * .35 + m * .65; return { x: v.x / l * c, y: -v.y / l * c }; }
+      return { x: 0, y: 0 }; }
+  }
+
+  /* ---------- particles (instanced, pooled) ---------- */
+  const PMAX = 280;
+  class Particles {
+    constructor(scene) { this.mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .45, metalness: .05, emissive: 0x111111, emissiveIntensity: .2 }), PMAX);
+      this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); this.mesh.frustumCulled = false;
+      this.pos = new Float32Array(PMAX * 3); this.vel = new Float32Array(PMAX * 3); this.life = new Float32Array(PMAX); this.maxLife = new Float32Array(PMAX); this.size = new Float32Array(PMAX); this.alive = new Uint8Array(PMAX);
+      this.d = new THREE.Object3D(); this.col = new THREE.Color(); this.cur = 0;
+      for (let i = 0; i < PMAX; i++) { this.d.position.set(0, -200, 0); this.d.scale.setScalar(.001); this.d.updateMatrix(); this.mesh.setMatrixAt(i, this.d.matrix); this.mesh.setColorAt(i, this.col.setHex(0xffffff)); }
+      this.mesh.instanceColor.needsUpdate = true; this.mesh.instanceMatrix.needsUpdate = true; scene.add(this.mesh); }
+    burst(x, y, z, n, color, o = {}) { const sp = o.speed ?? 3, up = o.up ?? 4, sz = o.size ?? .16, lf = o.life ?? .8, spr = o.spread ?? .2, cnt = Math.min(n, 40);
+      for (let k = 0; k < cnt; k++) { const i = this.cur; this.cur = (this.cur + 1) % PMAX; this.alive[i] = 1; const a = Math.random() * Math.PI * 2, r = Math.random();
+        this.pos[i * 3] = x + (Math.random() - .5) * spr; this.pos[i * 3 + 1] = y + (Math.random() - .5) * spr; this.pos[i * 3 + 2] = z + (Math.random() - .5) * spr;
+        this.vel[i * 3] = Math.cos(a) * sp * r; this.vel[i * 3 + 1] = up * (.45 + Math.random() * .7); this.vel[i * 3 + 2] = Math.sin(a) * sp * r;
+        this.maxLife[i] = this.life[i] = lf * (.7 + Math.random() * .6); this.size[i] = sz * (.7 + Math.random() * .6);
+        this.mesh.setColorAt(i, this.col.setHex(Array.isArray(color) ? color[(Math.random() * color.length) | 0] : color)); }
+      this.mesh.instanceColor.needsUpdate = true; }
+    update(dt) { let any = false; for (let i = 0; i < PMAX; i++) { if (!this.alive[i]) continue; any = true; this.life[i] -= dt;
+        if (this.life[i] <= 0) { this.alive[i] = 0; this.d.position.set(0, -200, 0); this.d.scale.setScalar(.001); this.d.updateMatrix(); this.mesh.setMatrixAt(i, this.d.matrix); continue; }
+        this.vel[i * 3 + 1] -= 12 * dt; this.pos[i * 3] += this.vel[i * 3] * dt; this.pos[i * 3 + 1] += this.vel[i * 3 + 1] * dt; this.pos[i * 3 + 2] += this.vel[i * 3 + 2] * dt;
+        if (this.pos[i * 3 + 1] < .05) { this.pos[i * 3 + 1] = .05; this.vel[i * 3 + 1] *= -.35; this.vel[i * 3] *= .7; this.vel[i * 3 + 2] *= .7; }
+        const t = this.life[i] / Math.max(.001, this.maxLife[i]); this.d.position.set(this.pos[i * 3], this.pos[i * 3 + 1], this.pos[i * 3 + 2]); this.d.rotation.set(this.life[i] * 5, this.life[i] * 7, 0);
+        this.d.scale.setScalar(Math.max(.001, this.size[i] * Math.min(1, t * 3))); this.d.updateMatrix(); this.mesh.setMatrixAt(i, this.d.matrix); }
+      if (any) this.mesh.instanceMatrix.needsUpdate = true; }
+  }
+  class FloatingText {
+    constructor(scene) { this.scene = scene; this.items = []; this.pool = []; }
+    spawn(text, x, y, z, color = '#ffe45c', scale = 1) { let s = this.pool.pop(); if (!s) { s = new THREE.Sprite(new THREE.SpriteMaterial({ depthTest: false, transparent: true, depthWrite: false })); s.renderOrder = 20; }
+      s.material.map = floatTex(String(text), color); s.material.needsUpdate = true; s.material.opacity = 1; s.position.set(x, y, z); const sx = 2.8 * scale, sy = .7 * scale; s.scale.set(sx, sy, 1); this.scene.add(s); this.items.push({ s, life: 1, vy: 2.4, sx, sy }); }
+    update(dt) { for (let i = this.items.length - 1; i >= 0; i--) { const it = this.items[i]; it.life -= dt * 1.05; it.s.position.y += it.vy * dt; it.vy *= Math.pow(.94, dt * 60);
+        const pop = it.life > .85 ? 1 + (it.life - .85) * 2.5 : 1; it.s.scale.set(it.sx * pop, it.sy * pop, 1); it.s.material.opacity = Math.min(1, it.life * 2.4);
+        if (it.life <= 0) { this.scene.remove(it.s); this.pool.push(it.s); this.items.splice(i, 1); } } }
+  }
+
+  /* ---------- quality manager ---------- */
+  class Quality {
+    constructor(g) { this.g = g; this.acc = 0; this.n = 0; this.level = 2; this.reset(); }
+    reset() { const q = settings.quality; this.level = q === 'low' ? 0 : q === 'high' ? 2 : (this.g.isMobile ? 1 : 2); this.acc = 0; this.n = 0; this.apply(); }
+    apply() { const r = this.g.renderer, dpr = window.devicePixelRatio || 1; r.setPixelRatio([1, Math.min(dpr, 1.5), Math.min(dpr, 2)][this.level]); this.g.resize();
+      const size = [1024, 1536, 2048][this.level]; const s = this.g.sun; if (s.shadow.mapSize.x !== size) { s.shadow.mapSize.set(size, size); if (s.shadow.map) { s.shadow.map.dispose(); s.shadow.map = null; } }
+      const type = this.level === 0 ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap; if (r.shadowMap.type !== type) { r.shadowMap.type = type; this.g.scene.traverse((o) => { if (o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; for (const m of ms) m.needsUpdate = true; } }); } }
+    tick(dt) { if (settings.quality !== 'auto') return; this.acc += dt; this.n++; if (this.acc < 3) return; const fps = this.n / this.acc; this.acc = 0; this.n = 0;
+      if (fps < 40 && this.level > 0) { this.level--; this.apply(); } }
+  }
+
+  /* ---------- the game ---------- */
+  class Game {
+    constructor(canvas) {
+      this.isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && innerWidth < 1100);
+      this.renderer = new THREE.WebGLRenderer({ canvas, antialias: !this.isMobile, powerPreference: 'high-performance' });
+      this.renderer.shadowMap.enabled = true; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+      this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.08;
+      this.scene = new THREE.Scene(); this.scene.fog = new THREE.Fog(0xbfeaff, 42, 90); this.camera = new THREE.PerspectiveCamera(38, 1, .5, 160);
+      this.input = new Input(canvas); this.particles = new Particles(this.scene); this.ftext = new FloatingText(this.scene);
+      this.matKinds = KINDS.map((k) => new THREE.MeshStandardMaterial({ color: k.color, roughness: .5, metalness: .02 }));
+      this.geoItem = new THREE.BoxGeometry(.4, .28, .4); this.geoBill = new THREE.BoxGeometry(.42, .1, .26);
+      this.matBill = new THREE.MeshStandardMaterial({ color: 0x4fd07a, roughness: .5, emissive: 0x0e5a2a, emissiveIntensity: .25 });
+      this.matVip = new THREE.MeshStandardMaterial({ color: 0xffd93d, roughness: .35, metalness: .3, emissive: 0x554400, emissiveIntensity: .3 });
+      this.tmp = new THREE.Vector3(); this.tmp2 = new THREE.Vector3(); this.yAxis = new THREE.Vector3(0, 1, 0); this.colA = new THREE.Color(); this.colB = new THREE.Color();
+      this.palette = [0xff8fb1, 0x7ec8f0, 0xffd166, 0xb8e986, 0xc4a3f5, 0xff9f6e, 0x7fe3d0, 0xf4a6c8];
+      this.padMatOn = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .5 }); this.padMatOff = new THREE.MeshStandardMaterial({ color: 0xcdd6e0, roughness: .85 });
+      this.plots = []; this.shelves = []; this.pads = []; this.customers = []; this.bills = []; this.billPool = []; this.carry = []; this.carryMeshes = [];
+      this.counterPos = new THREE.Vector3(9, 0, 3.5); this.registerSpot = new THREE.Vector3(8.2, 0, 1.2);
+      this.ppos = new THREE.Vector3(-6, 0, 3); this.pvel = new THREE.Vector3(); this.camTarget = new THREE.Vector3(-1, 0, 1); this.camLook = new THREE.Vector3(-1, 0, 1);
+      this.phase = 'idle'; this.time = 0; this.acc = 0; this.last = performance.now(); this.hudTimer = 0; this.saveTimer = 0; this.playTime = 0;
+      this.stars = 0; this.lifetime = { earned: 0, served: 0 }; this.missions = { tier: 0, done: 0, active: [] }; this.harvested = 0; this.upgradesBought = 0; this.personalSales = 0;
+      this.porter = null; this.porterSpeed = 0; this.porterTarget = null; this.porterState = 'idle'; this.porterCarry = []; this.porterCarryMeshes = [];
+      this.minimapCanvas = $('minimap'); this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null;
+      this.buildWorld(); this.buildPlayer(); this.buildPorter(); this.resetRun(); this.quality = new Quality(this);
+      window.addEventListener('resize', this.resize); window.addEventListener('orientationchange', () => setTimeout(this.resize, 200));
+      document.addEventListener('visibilitychange', () => { if (document.hidden) { if (this.phase === 'playing') this.pause(); this.save(); } });
+      window.addEventListener('pagehide', () => this.save()); window.addEventListener('beforeunload', () => this.save());
+      this.resize(); requestAnimationFrame(this.loop);
+    }
+    get starMult() { return 1 + this.stars * .05; }
+    get hasSave() { return !!store.get(KEYS.save, null); }
+    resize = () => { const w = Math.max(1, innerWidth), h = Math.max(1, innerHeight); this.renderer.setSize(w, h, false); this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); };
+
+    /* ---- world ---- */
+    buildWorld() { const s = this.scene;
+      this.skyMat = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false,
+        uniforms: { top: { value: new THREE.Color(0x3fa9f5) }, mid: { value: new THREE.Color(0xa9e4ff) }, bot: { value: new THREE.Color(0xeafbff) } },
+        vertexShader: 'varying vec3 vp; void main(){vp=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+        fragmentShader: 'varying vec3 vp; uniform vec3 top; uniform vec3 mid; uniform vec3 bot; void main(){float h=normalize(vp).y; vec3 c=h>0.0?mix(mid,top,pow(h,0.7)):mix(mid,bot,pow(-h,0.5)); gl_FragColor=vec4(c,1.0);}' });
+      const sky = new THREE.Mesh(new THREE.SphereGeometry(110, 24, 12), this.skyMat); sky.frustumCulled = false; s.add(sky);
+      this.cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9, depthWrite: false, fog: false }); this.clouds = [];
+      for (let i = 0; i < 8; i++) { const cg = new THREE.Group(); const n = 3 + (i % 3); for (let j = 0; j < n; j++) { const p = new THREE.Mesh(new THREE.SphereGeometry(2 + ((i + j) % 3), 8, 6), this.cloudMat); p.position.set((j - n / 2) * 2.6, (j % 2) * .6, (i % 2) * 1.5); p.scale.y = .55; cg.add(p); }
+        const a = (i / 8) * Math.PI * 2; cg.position.set(Math.cos(a) * 60, 28 + (i % 4) * 3, Math.sin(a) * 60); cg.userData.a = a; s.add(cg); this.clouds.push(cg); }
+      this.hemi = new THREE.HemisphereLight(0xdcf1ff, 0x6f9a52, .9); s.add(this.hemi);
+      const fill = new THREE.DirectionalLight(0xbfd8ff, .35); fill.position.set(-12, 10, -8); s.add(fill);
+      this.sun = new THREE.DirectionalLight(0xfff4d6, 2); this.sun.position.set(14, 26, 12); this.sun.castShadow = true; this.sun.shadow.mapSize.set(2048, 2048);
+      Object.assign(this.sun.shadow.camera, { left: -24, right: 24, top: 22, bottom: -22, near: 1, far: 70 }); this.sun.shadow.bias = -.0009; this.sun.shadow.normalBias = .02; s.add(this.sun); s.add(this.sun.target);
+      this.shopLight = new THREE.PointLight(0xffd9a0, 0, 26, 1.6); this.shopLight.position.set(4.5, 4.5, 1); s.add(this.shopLight);
+      const grass = new THREE.Mesh(new THREE.PlaneGeometry(220, 220), new THREE.MeshStandardMaterial({ color: 0x86cf67, roughness: 1 })); grass.rotation.x = -Math.PI / 2; grass.position.y = -.03; grass.receiveShadow = true; s.add(grass);
+      const patch = new THREE.Mesh(new THREE.CircleGeometry(32, 40), new THREE.MeshStandardMaterial({ color: 0x7bc25c, roughness: 1 })); patch.rotation.x = -Math.PI / 2; patch.position.set(-2, -.02, 1); patch.receiveShadow = true; s.add(patch);
+      const soil = new THREE.Mesh(new THREE.PlaneGeometry(9.5, 21), new THREE.MeshStandardMaterial({ color: 0x9ad379, roughness: 1 })); soil.rotation.x = -Math.PI / 2; soil.position.set(-10, .005, .5); soil.receiveShadow = true; s.add(soil);
+      const cv = document.createElement('canvas'); cv.width = cv.height = 128; const cx = cv.getContext('2d'); cx.fillStyle = '#fdf3e3'; cx.fillRect(0, 0, 128, 128); cx.fillStyle = '#f0e0c8'; cx.fillRect(0, 0, 64, 64); cx.fillRect(64, 64, 64, 64);
+      const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(9, 10);
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(18, 20), new THREE.MeshStandardMaterial({ map: tex, roughness: .6, metalness: .04 })); floor.rotation.x = -Math.PI / 2; floor.position.set(4.5, .01, 1); floor.receiveShadow = true; s.add(floor);
+      const wall = (w, h, d, x, z) => { const m = box(w, h, d, 0xfffaf0); m.position.set(x, h / 2, z); s.add(m); };
+      wall(19, 2.6, .5, 4.5, -9.3); wall(.5, 2.6, 21, 13.8, 1); wall(6, 2.6, .5, -.5, 11.3); wall(6, 2.6, .5, 9.5, 11.3);
+      for (let i = 0; i < 5; i++) { const a1 = box(1.05, .25, 1.1, i % 2 ? 0xffffff : 0xff5d5d); a1.position.set(-2.6 + i * 1.1, 2.75, 11.3); s.add(a1); const a2 = box(1.05, .25, 1.1, i % 2 ? 0xffffff : 0xff5d5d); a2.position.set(7.4 + i * 1.1, 2.75, 11.3); s.add(a2); }
+      const mat = box(3.6, .05, 2, 0xff5d5d, false); mat.position.set(4.5, .03, 10.9); s.add(mat);
+      const sb = box(8, 1.6, .4, 0xff5d5d); sb.position.set(4.5, 3.4, 11.3); s.add(sb); const sgn = sprite(bubbleTex('MINI MART'), 5.6, 2.8); sgn.position.set(4.5, 3.45, 11.75); s.add(sgn);
+      for (let z = -10; z <= 11.1; z += 1.75) this.fencePost(-15.6, z); for (let x = -15.6; x <= -3.9; x += 1.75) { this.fencePost(x, -10); this.fencePost(x, 11); }
+      for (const [x, z] of [[-19, -7], [-19, 4], [17.5, -6], [18, 5], [-4, 15], [12, 15], [-18, 12], [7, -13.5], [-8, -13.5], [20, 12]]) { const t = new THREE.Group(); const tr = box(.45, 1.3, .45, 0x9a6b42); tr.position.y = .65;
+        const lf = new THREE.Mesh(new THREE.IcosahedronGeometry(1.35, 0), new THREE.MeshStandardMaterial({ color: 0x5fbf62, flatShading: true, roughness: .85 })); lf.position.y = 2.1; lf.castShadow = true; t.add(tr, lf); t.position.set(x, 0, z); s.add(t); }
+      for (const z of [-6.4, -4.1, -1.8]) for (const x of [-13.2, -10.6, -8]) this.makePlot(0, x, z);
+      for (const z of [1.2, 3.5, 5.8]) for (const x of [-13.2, -10.6, -8]) this.makePlot(1, x, z);
+      for (const z of [8.4, 10.4]) for (const x of [-13.2, -10.6, -8]) { if (z === 10.4 && x === -8) continue; this.makePlot(2, x, z); }
+      this.plots.sort((a, b) => a.kind - b.kind || ((a.pos.x + 5.5) ** 2 + a.pos.z ** 2) - ((b.pos.x + 5.5) ** 2 + b.pos.z ** 2));
+      this.makeShelf(0, 2.5, -5.5); this.makeShelf(1, 2.5, -1); this.makeShelf(2, 2.5, 3.5);
+      const cp = this.counterPos; const counter = box(3.6, 1.05, 1.5, 0xffffff); counter.position.set(cp.x, .52, cp.z); s.add(counter);
+      const ctop = box(3.8, .16, 1.7, 0x6fd3f7); ctop.position.set(cp.x, 1.08, cp.z); s.add(ctop); const reg = box(.75, .55, .6, 0xf0f4f8); reg.position.set(cp.x - 1.1, 1.42, cp.z); s.add(reg);
+      const scr = box(.72, .42, .08, 0x35435e); scr.position.set(cp.x - 1.1, 1.76, cp.z + .12); scr.rotation.x = -.25; s.add(scr); const belt = box(2.2, .06, 1.2, 0xbfeaf7); belt.position.set(cp.x + .6, 1.18, cp.z); s.add(belt);
+      this.registerRing = ringMesh(1.7, 0x4dd0e1); this.registerRing.position.set(this.registerSpot.x, .03, this.registerSpot.z); s.add(this.registerRing);
+      const cs = sprite(bubbleTex('CHECKOUT'), 3.4, 1.7); cs.position.set(cp.x, 2.9, cp.z); s.add(cs);
+      for (const d of PAD_DEFS) this.makePad(d);
+      this.arrow = new THREE.Mesh(new THREE.ConeGeometry(.42, .95, 4), new THREE.MeshStandardMaterial({ color: 0xffd93d, emissive: 0xffb300, emissiveIntensity: .6, roughness: .4 })); this.arrow.rotation.x = Math.PI; s.add(this.arrow);
+    }
+    fencePost(x, z) { const p = box(.18, .85, .18, 0xd9a463); p.position.set(x, .42, z); this.scene.add(p); }
+    makePlot(kind, x, z) { const K = KINDS[kind], g = new THREE.Group(); g.position.set(x, 0, z); const soil = box(2.2, .28, 2, 0x8a5a38); soil.position.y = .14; g.add(soil); const rim = box(2.35,.14, 2.15, 0xa7703f); rim.position.y = .07; g.add(rim);
+      const crop = new THREE.Group(); crop.position.y = .28; const fruits = []; const stalks = []; const leafM = new THREE.MeshStandardMaterial({ color: K.leaf, flatShading: true, roughness: .9 }); const fruitM = new THREE.MeshStandardMaterial({ color: K.color, roughness: .35 });
+      const s3 = [[-.4, .25], [.42, -.2], [0, -.55]], s4 = [[-.42, .25], [.42, -.2], [0, .55], [.1, -.55]];
+      if (kind === 2) { for (const [fx, fz] of s3) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(.42, 0), leafM); b.position.set(fx, .3, fz); b.castShadow = true; crop.add(b); stalks.push(b); const f = new THREE.Mesh(new THREE.SphereGeometry(.36, 14, 12), fruitM); f.scale.set(1, .85, 1.15); f.position.set(fx + .08, .62, fz + .1); f.castShadow = true; crop.add(f); fruits.push(f); } }
+      else if (kind === 1) { for (const [fx, fz] of s3) { const st = box(.16, 1.5, .16, K.leaf); st.position.set(fx, .75, fz); crop.add(st); stalks.push(st); const lf = box(.8, .09, .22, 0x7fd06f); lf.position.set(fx + .25, .9, fz); lf.rotation.z = .45; crop.add(lf); const f = box(.3, .68, .3, K.color); f.position.set(fx + .16, 1.15, fz + .08); crop.add(f); fruits.push(f); } }
+      else { for (const [fx, fz] of s4) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(.4, 0), leafM); b.position.set(fx, .38, fz); b.castShadow = true; crop.add(b); stalks.push(b); const f = new THREE.Mesh(new THREE.SphereGeometry(.25, 12, 10), fruitM); f.position.set(fx + .1, .62, fz + .15); f.castShadow = true; crop.add(f); fruits.push(f); } }
+      g.add(crop); const r = ringMesh(1.55, K.color); g.add(r); g.visible = false; this.scene.add(g); this.plots.push({ kind, pos: g.position.clone(), growth: 0, unlocked: false, group: g, crop, fruits, stalks, ring: r, pop: 0 }); }
+    makeShelf(kind, x, z) { const K = KINDS[kind], g = new THREE.Group(); g.position.set(x, 0, z); const back = box(1.1, 1.9, 3.6, 0xf7f9fc); back.position.set(-.45, .95, 0); g.add(back);
+      for (let i = 0; i < 3; i++) { const sh = box(1.5, .12, 3.5, i === 0 ? K.color : 0xe9eef5); sh.position.set(.2, .45 + i * .62, 0); g.add(sh); }
+      const r = ringMesh(2.4, K.color); g.add(r); const lbl = sprite(bubbleTex(K.emoji + ' ' + K.name, '$' + K.price), 3, 1.5); lbl.position.set(0, 2.8, 0); g.add(lbl);
+      const empty = sprite(iconTex('❗', '#ff4d4d', 100), 1.1, 1.1); empty.position.set(.4, 2, 0); empty.visible = false; g.add(empty);
+      const itemMeshes = []; for (let i = 0; i < 15; i++) { const m = new THREE.Mesh(this.geoItem, this.matKinds[kind]); m.position.set(.25, .72 + Math.floor(i / 5) * .62, -1.25 + (i % 5) * .62); m.castShadow = true; m.visible = false; g.add(m); itemMeshes.push(m); }
+      g.visible = false; this.scene.add(g); this.shelves.push({ kind, pos: g.position.clone(), items: 0, max: 15, unlocked: false, group: g, itemMeshes, ring: r, pop: 0, emptyIcon: empty }); }
+    makePad(d) { const g = new THREE.Group(); g.position.set(d.x, 0, d.z); const base = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, .1, 26), this.padMatOff); base.position.y = .05; base.receiveShadow = true; g.add(base);
+      const fill = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .12, 26), new THREE.MeshStandardMaterial({ color: 0x53c66f, roughness: .5, emissive: 0x1e7a3e, emissiveIntensity: .3 })); fill.position.y = .06; fill.scale.set(.001, 1, .001); g.add(fill);
+      const glow = ringMesh(1.25, 0x53c66f); g.add(glow); const dl = new DynLabel(); dl.draw(d.label, '$' + d.cost); const sp = sprite(dl.tex, 3, 1.5); sp.position.y = 2.25; g.add(sp);
+      g.visible = false; this.scene.add(g); this.pads.push({ id: d.id, pos: g.position.clone(), cost: d.cost, paid: 0, label: d.label, req: d.req, bought: false, group: g, base, fill, sprite: sp, dl, visible: false, glow }); }
+    buildPlayer() { const { g, body } = makePerson(0x4aa3ff); const cap = new THREE.Mesh(new THREE.SphereGeometry(.37, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xff5d5d, roughness: .55 })); cap.position.y = 1.2; cap.castShadow = true; g.add(cap);
+      const brim = box(.56, .07, .36, 0xff5d5d); brim.position.set(0, 1.22, .34); g.add(brim); const apron = box(.56, .62, .12, 0xffffff); apron.position.set(0, .68, .32); g.add(apron);
+      this.carryGroup = new THREE.Group(); this.carryGroup.position.set(0, 1.45, 0); g.add(this.carryGroup); this.maxSprite = sprite(bubbleTex('MAX'), 1.5, .75); this.maxSprite.visible = false; g.add(this.maxSprite);
+      this.playerShadow = blobShadow(1.5); g.add(this.playerShadow); this.player = g; this.playerBody = body; this.playerCap = cap; this.playerBrim = brim; this.scene.add(g);
+      this.applyOutfit(currentOutfit, true); }
+    applyOutfit(id, silent = false) { const o = OUTFITS.find((x) => x.id === id) || OUTFITS[0]; currentOutfit = o.id; store.set(KEYS.outfit, o.id);
+      if (this.playerBody) { this.playerBody.material.color.setHex(o.body); this.playerCap.material.color.setHex(o.cap); this.playerBrim.material.color.setHex(o.cap); }
+      if (!silent) { sfx.ui(); toast(`Wearing ${o.name}!`, o.icon, true); this.shake(.15); } }
+    buildPorter() {
+      // Helper Porter bot unlocked at Level 3
+      const { g, body } = makePerson(0x06b6d4); const hat = box(.5, .2, .5, 0x0891b2); hat.position.y = 1.35; g.add(hat);
+      const shadow = blobShadow(1.3); g.add(shadow);
+      this.porterCarryGroup = new THREE.Group(); this.porterCarryGroup.position.set(0, 1.45, 0); g.add(this.porterCarryGroup);
+      g.position.set(0, 0, -1); g.visible = false; this.scene.add(g);
+      this.porter = g; this.porterBody = body; this.porterShadow = shadow; this.porterPos = new THREE.Vector3(0, 0, -1);
+    }
+
+    /* ---- run state ---- */
+    resetRun() { this.money = 0; this.earned = 0; this.level = 1; this.xp = 0; this.served = 0; this.combo = 0; this.comboTimer = 0; this.tutorialStep = 0; this.speed = 6.2; this.carryMax = 8; this.cashierSpeed = 0;
+      this.carry = []; this.unlockName = null; this.unlockTimer = 0; this.frenzy = 0; this.frenzyNext = 60; this.spawnTimer = 1.2; this.trauma = 0; this.squash = 0; this.actionCd = 0; this.cashierBob = 0; this.harvested = 0; this.upgradesBought = 0; this.personalSales = 0;
+      this.ppos.set(-6, 0, 3); this.pvel.set(0, 0, 0); this.pyaw = 0; this.updateCarryMeshes();
+      for (const c of this.customers) this.scene.remove(c.group); this.customers = []; for (const b of this.bills) { this.scene.remove(b.mesh); this.billPool.push(b.mesh); } this.bills = [];
+      if (this.cashier) { this.scene.remove(this.cashier); this.cashier = null; }
+      if (this.porter) { this.porter.visible = false; this.porterSpeed = 0; this.porterCarry = []; this.updatePorterCarryMeshes(); }
+      let t = 0; for (const p of this.plots) { const on = p.kind === 0 && t < 3; if (on) t++; p.unlocked = on; p.growth = on ? 1 : 0; p.group.visible = on; p.pop = 0; }
+      for (const s of this.shelves) { s.unlocked = s.kind === 0; s.items = 0; s.group.visible = s.unlocked; this.updateShelfMeshes(s); }
+      for (const p of this.pads) { p.bought = false; p.paid = 0; p.fill.scale.set(.001, 1, .001); p.dl.draw(p.label, '$' + p.cost); }
+      for (const k of KINDS) k.grow = k.baseGrow; this.refreshPads(); this.ensureMissions(); }
+    startNew() { this.resetRun(); this.begin(); toast('Welcome to your new shop!', '🏪', true); }
+    begin() { sfx.resume(); sfx.ui(); this.phase = 'playing'; this.input.enabled = true; this.camTarget.copy(this.ppos); ui.show(''); this.pushHud(); this.save(); }
+    pause() { if (this.phase !== 'playing') return; this.phase = 'paused'; this.input.enabled = false; ui.show('pause'); this.pushHud(); this.save();
+      setText($('pEarned'), '$' + money(this.earned)); setText($('pLevel'), this.level); setText($('pServed'), this.served); }
+    resume() { if (this.phase !== 'paused') return; this.phase = 'playing'; this.input.enabled = true; ui.show(''); this.pushHud(); }
+    togglePause() { this.phase === 'playing' ? this.pause() : this.resume(); }
+
+    /* ---- persistence ---- */
+    save() { if (this.phase === 'idle') return; const data = { v: 2, ver: VERSION, money: Math.floor(this.money), earned: Math.floor(this.earned), level: this.level, xp: this.xp, served: this.served, harvested: this.harvested, upgradesBought: this.upgradesBought, personalSales: this.personalSales,
+        bought: this.pads.filter((p) => p.bought).map((p) => p.id), stars: this.stars, lifetime: this.lifetime, missions: this.missions, tutorialStep: this.tutorialStep, playTime: this.playTime, lastSeen: Date.now() };
+      store.set(KEYS.save, data); }
+    loadMeta(d) { if (!d) return; this.stars = d.stars | 0; this.lifetime = Object.assign({ earned: 0, served: 0 }, d.lifetime || {}); if (d.missions && Array.isArray(d.missions.active)) this.missions = d.missions; }
+    continueFrom(d) { this.resetRun(); this.loadMeta(d);
+      this.money = Math.max(0, d.money | 0); this.earned = Math.max(0, d.earned | 0); this.level = Math.max(1, d.level | 0); this.xp = Math.max(0, d.xp || 0); this.served = d.served | 0; this.harvested = d.harvested | 0; this.upgradesBought = d.upgradesBought | 0; this.personalSales = d.personalSales | 0;
+      this.tutorialStep = Math.min(4, d.tutorialStep | 0); this.playTime = d.playTime || 0;
+      const bought = new Set(Array.isArray(d.bought) ? d.bought : []); for (const def of PAD_DEFS) { const p = this.pads.find((q) => q.id === def.id); if (bought.has(def.id)) { p.bought = true; p.paid = p.cost; this.applyUpgrade(p.id, true); } }
+      for (const p of this.plots) if (p.unlocked) p.growth = 1; this.refreshPads(); this.ensureMissions();
+      if (this.level >= 3 && this.porter) { this.porter.visible = true; this.porterSpeed = 2.8; }
+      const away = clamp((Date.now() - (d.lastSeen || Date.now())) / 1000, 0, 4 * 3600);
+      this.begin();
+      if (away >= 90 && this.level >= 2) { let open = 0; for (const s of this.shelves) if (s.unlocked) open++; const rate = (1.2 + this.level * .9) * (this.cashierSpeed > 0 ? 1 : .35) * (1 + (open - 1) * .9) * this.starMult; const gain = Math.round(away * rate);
+        if (gain > 0) { this.pause(); ui.show(''); modal({ icon: '🌙', title: 'Welcome back!', body: `Your shop kept running for <b>${fmtTime(away)}</b>${this.cashierSpeed > 0 ? ' with your cashier' : ''}.<br><br><span style="font-size:1.6em;color:#189a50">+$${money(gain)}</span>`,
+          buttons: [{ label: '💰 COLLECT', primary: true, onClick: () => { this.addMoney(gain); this.ftext.spawn('+$' + money(gain), this.ppos.x, 3, this.ppos.z, '#7ef7c0', 1.3); sfx.mission(); this.resume(); } }] }); } }
+    }
+    cashOut() { const gained = Math.min(200, Math.floor(Math.sqrt(this.earned / 400)));
+      modal({ icon: '🏁', title: 'Cash out?', body: `Bank <b>$${money(this.earned)}</b> to the high-score table and earn <b>⭐ ${gained} star${gained === 1 ? '' : 's'}</b> (+${gained * 5}% income forever).<br><br>Your shop resets and you start a fresh one with all your stars.`,
+        buttons: [{ label: '🏁 CASH OUT', primary: true, onClick: () => this.finishRun(gained) }, { label: 'Not yet', onClick: () => {} }] }); }
+    finishRun(gained) { this.phase = 'over'; this.input.enabled = false; const name = ($('nameInput').value || 'Shopkeeper').trim() || 'Shopkeeper'; store.set(KEYS.name, name);
+      const r = saveScore({ name, score: Math.round(this.earned), served: this.served }); bestCache = r.list[0].score; this.stars += gained;
+      setText($('overEarned'), '$' + money(this.earned)); setText($('overStats'), `Level ${this.level} · ${this.served} customers · ${this.upgradesBought} upgrades`);
+      setText($('overStars'), gained > 0 ? `⭐ +${gained} stars → ${this.stars} total (+${this.stars * 5}% income)` : `Earn $400+ to gain your first ⭐ star`);
+      const rk = $('overRank'); rk.classList.remove('hidden'); if (r.rank === 0) { rk.textContent = '🏆 NEW HIGH SCORE!'; rk.style.color = '#fde047'; } else if (r.rank > 0) { rk.textContent = 'Ranked #' + (r.rank + 1); rk.style.color = '#7dd3fc'; } else rk.classList.add('hidden');
+      renderScores($('overScores'), r.list, r.rank); ui.show('over'); this.resetRun(); this.save(); buzz([30, 40, 30]); sfx.levelUp(); }
+
+    /* ---- missions ---- */
+    ensureMissions() { const m = this.missions; m.active = (m.active || []).filter((x) => x && x.type && x.goal > 0 && !x.claimed && MISSION_TYPES.some((t) => t.type === x.type));
+      let guard = 0; while (m.active.length < 3 && guard++ < 20) { const remainingPads = this.pads.filter((p) => !p.bought).length; const pool = MISSION_TYPES.filter((t) => !m.active.some((a) => a.type === t.type) && (t.type !== 'unlock' || remainingPads > 0)); if (!pool.length) break;
+        const T = pool[(Math.random() * pool.length) | 0]; const goal = T.goal(m.tier, this.level); const reward = Math.round((40 + m.tier * 35) * (1 + this.level * .35) * this.starMult);
+        m.active.push({ type: T.type, goal, prog: 0, reward, id: Date.now() + Math.random() }); } this.renderMissions(); }
+    progress(type, amount = 1, absolute = false) { let changed = false; for (const a of this.missions.active) { if (a.type !== type || a.claimed) continue; a.prog = absolute ? Math.max(a.prog, amount) : a.prog + amount; changed = true;
+        if (a.prog >= a.goal) { a.claimed = true; this.addMoney(a.reward); this.missions.done++; this.missions.tier = Math.min(30, this.missions.tier + 1); const T = MISSION_TYPES.find((t) => t.type === type); toast(`Goal complete: ${T.label(a.goal)}  +$${money(a.reward)}`, '🎯', true); sfx.mission(); buzz([20, 30, 20]);
+          this.ftext.spawn('GOAL +$' + money(a.reward), this.ppos.x, 3.2, this.ppos.z, '#7ef7c0', 1.1); setTimeout(() => { this.missions.active = this.missions.active.filter((x) => x !== a); this.ensureMissions(); }, 0); } }
+      if (changed) this.missionsDirty = true; }
+    renderMissions() { this.missionsDirty = false; const el = $('missionList'); const T = (t) => MISSION_TYPES.find((x) => x.type === t);
+      el.innerHTML = this.missions.active.map((a) => { const t = T(a.type); const pct = Math.min(100, a.prog / a.goal * 100); return `<div class="mission${a.claimed ? ' done' : ''}"><div class="ic">${t.icon}</div><div class="t">${t.label(a.goal)}<div class="bar"><div style="width:${pct}%"></div></div><span style="font-size:.75em;opacity:.6">${Math.min(a.prog, a.goal)} / ${a.goal}</span></div><div class="rw">+$${money(a.reward)}</div></div>`; }).join('') || '<p class="sub">All goals complete — more coming soon!</p>';
+      const near = this.missions.active.some((a) => a.prog / a.goal >= .8 && !a.claimed); $('missionDot').classList.toggle('hidden', !near); }
+
+    /* ---- economy ---- */
+    addMoney(v) { v = Math.max(0, Math.round(v)); if (!v) return; this.money += v; this.earned += v; this.lifetime.earned += v; this.progress('earn', v); bus.emit('earn', v); }
+
+    /* ---- loop (fixed timestep) ---- */
+    loop = (now) => { requestAnimationFrame(this.loop); let dt = (now - this.last) / 1000; this.last = now; if (!(dt > 0)) dt = 0; if (dt > .25) dt = .25; this.time += dt;
+      if (this.phase === 'playing') { this.acc += dt; let n = 0; while (this.acc >= STEP && n < 6) { this.update(STEP); this.acc -= STEP; n++; } if (n === 6) this.acc = 0; this.playTime += dt; this.saveTimer += dt; if (this.saveTimer > 6) { this.saveTimer = 0; this.save(); } }
+      this.animate(dt); this.updateCamera(dt); this.dayNight(); this.quality.tick(dt); this.drawMinimap();
+      try { this.renderer.render(this.scene, this.camera); } catch (e) { console.error(e); }
+      this.hudTimer += dt; if (this.hudTimer > .1 && this.phase === 'playing') { this.hudTimer = 0; this.pushHud(); } };
+    update(dt) { if (this.comboTimer > 0) { this.comboTimer -= dt; if (this.comboTimer <= 0) this.combo = 0; } if (this.unlockTimer > 0) this.unlockTimer -= dt;
+      if (this.frenzy > 0) { this.frenzy -= dt; if (this.frenzy <= 0) { this.frenzy = 0; this.pushHud(); } }
+      else { this.frenzyNext -= dt; if (this.frenzyNext <= 0) { this.frenzy = 20; this.frenzyNext = 95; this.shake(.5); this.ftext.spawn('MEGA SALE! 2X CASH', this.ppos.x, 3.4, this.ppos.z, '#ff9e2c', 1.4); sfx.unlock(); buzz([30, 30, 30]); toast('MEGA SALE — double cash for 20s!', '🔥', true); this.pushHud(); } }
+      this.updatePlayer(dt); for (const p of this.plots) if (p.unlocked && p.growth < 1) p.growth = Math.min(1, p.growth + dt / KINDS[p.kind].grow);
+      this.updatePorter(dt); this.updateInteractions(); this.updateCustomers(dt); this.updateBills(dt); this.updatePads(dt); this.updateSpawns(dt); }
+    shake(v) { if (!settings.shake || reduceMotion) return; this.trauma = Math.min(1, this.trauma + v); }
+    updatePlayer(dt) { const a = this.input.axis(); const k = Math.min(1, ((a.x || a.y) ? 24 : 30) * dt);
+      this.pvel.x += (a.x * this.speed - this.pvel.x) * k; this.pvel.z += (-a.y * this.speed - this.pvel.z) * k; this.ppos.x += this.pvel.x * dt; this.ppos.z += this.pvel.z * dt;
+      this.ppos.x = clamp(this.ppos.x, BX0, BX1); this.ppos.z = clamp(this.ppos.z, BZ0, BZ1);
+      this.pushOut(this.counterPos.x, this.counterPos.z, 2.25); for (const s of this.shelves) if (s.unlocked) this.pushOut(s.pos.x - .2, s.pos.z, 1.95);
+      const sp = Math.hypot(this.pvel.x, this.pvel.z); if (sp > .4) { const yaw = Math.atan2(this.pvel.x, this.pvel.z); let d = yaw - this.pyaw; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; this.pyaw += d * Math.min(1, 20 * dt); }
+      if (this.actionCd > 0) this.actionCd -= dt; }
+    pushOut(sx, sz, min) { const dx = this.ppos.x - sx, dz = this.ppos.z - sz, d = Math.hypot(dx, dz); if (d < min) { if (d < .001) this.ppos.x = sx + min; else { this.ppos.x = sx + dx / d * min; this.ppos.z = sz + dz / d * min; } } }
+    near(x, z, r) { const dx = this.ppos.x - x, dz = this.ppos.z - z; return dx * dx + dz * dz < r * r; }
+    updateInteractions() { if (this.actionCd > 0) return;
+      if (this.carry.length < this.carryMax) for (const p of this.plots) { if (!p.unlocked || p.growth < 1 || !this.near(p.pos.x, p.pos.z, 1.75)) continue;
+        p.growth = 0; p.pop = 1; this.carry.push(p.kind); this.harvested++; this.updateCarryMeshes(); this.actionCd = .1; this.squash = 1; this.shake(.05);
+        this.particles.burst(p.pos.x, .9, p.pos.z, 7, [KINDS[p.kind].leaf, KINDS[p.kind].color], { speed: 2.6, up: 3.6, size: .15, life: .55 }); sfx.pick(this.carry.length); this.progress('harvest', 1);
+        if (this.tutorialStep === 0) { this.tutorialStep = 1; this.pushHud(); } return; }
+      if (this.carry.length > 0) for (const s of this.shelves) { if (!s.unlocked || s.items >= s.max || !this.near(s.pos.x, s.pos.z, 2.6)) continue; const idx = this.carry.lastIndexOf(s.kind); if (idx < 0) continue;
+        this.carry.splice(idx, 1); s.items++; s.pop = 1; this.updateCarryMeshes(); this.updateShelfMeshes(s); this.actionCd = .08; this.particles.burst(s.pos.x + .4, 1.5, s.pos.z, 4, KINDS[s.kind].color, { speed: 1.8, up: 3, size: .11, life: .4 }); sfx.stock();
+        if (this.tutorialStep === 1) { this.tutorialStep = 2; this.pushHud(); } return; } }
+    updateCarryMeshes() { while (this.carryMeshes.length < this.carry.length) { const m = new THREE.Mesh(this.geoItem, this.matKinds[0]); m.castShadow = true; this.carryGroup.add(m); this.carryMeshes.push(m); }
+      for (let i = 0; i < this.carryMeshes.length; i++) { const m = this.carryMeshes[i], on = i < this.carry.length; m.visible = on; if (on) { m.material = this.matKinds[this.carry[i]]; m.position.y = i * .32; } }
+      this.maxSprite.visible = this.carry.length >= this.carryMax; this.maxSprite.position.y = 1.5 + this.carry.length * .32 + .5; }
+    updateShelfMeshes(s) { for (let i = 0; i < s.itemMeshes.length; i++) s.itemMeshes[i].visible = i < s.items; s.emptyIcon.visible = s.unlocked && s.items === 0; }
+
+    /* ---- porter bot AI ---- */
+    updatePorter(dt) {
+      if (!this.porter || !this.porter.visible || this.porterSpeed <= 0) return;
+      const P = this.porterPos;
+      // State machine: harvest if room, or deliver to empty shelf
+      if (this.porterCarry.length < 4) {
+        // find ripe unlocked plot
+        let ripe = null; for (const p of this.plots) { if (p.unlocked && p.growth >= 1) { ripe = p; break; } }
+        if (ripe) {
+          const dx = ripe.pos.x - P.x, dz = ripe.pos.z - P.z, d = Math.hypot(dx, dz);
+          if (d > .2) { P.x += dx / d * this.porterSpeed * dt; P.z += dz / d * this.porterSpeed * dt; this.porter.rotation.y = Math.atan2(dx, dz); }
+          else { ripe.growth = 0; ripe.pop = 1; this.porterCarry.push(ripe.kind); this.updatePorterCarryMeshes();
+            this.particles.burst(ripe.pos.x, .9, ripe.pos.z, 4, [KINDS[ripe.kind].leaf, KINDS[ripe.kind].color]); }
+        }
+      } else {
+        // deliver to needy shelf
+        const kind = this.porterCarry[this.porterCarry.length - 1];
+        const targetShelf = this.shelves.find((s) => s.kind === kind && s.unlocked && s.items < s.max);
+        if (targetShelf) {
+          const dx = targetShelf.pos.x - P.x, dz = targetShelf.pos.z - P.z, d = Math.hypot(dx, dz);
+          if (d > .3) { P.x += dx / d * this.porterSpeed * dt; P.z += dz / d * this.porterSpeed * dt; this.porter.rotation.y = Math.atan2(dx, dz); }
+          else { this.porterCarry.pop(); targetShelf.items++; targetShelf.pop = 1; this.updateShelfMeshes(targetShelf); this.updatePorterCarryMeshes(); }
+        }
+      }
+      this.porter.position.set(P.x, Math.abs(Math.sin(this.time * 12)) * .08, P.z);
+      this.porterShadow.position.y = .04 - this.porter.position.y;
+    }
+    updatePorterCarryMeshes() {
+      while (this.porterCarryMeshes.length < this.porterCarry.length) {
+        const m = new THREE.Mesh(this.geoItem, this.matKinds[0]); this.porterCarryGroup.add(m); this.porterCarryMeshes.push(m);
+      }
+      for (let i = 0; i < this.porterCarryMeshes.length; i++) {
+        const m = this.porterCarryMeshes[i], on = i < this.porterCarry.length; m.visible = on;
+        if (on) { m.material = this.matKinds[this.porterCarry[i]]; m.position.y = i * .32; }
+      }
+    }
+
+    /* ---- customers ---- */
+    updateSpawns(dt) { this.spawnTimer -= dt; if (this.spawnTimer > 0) return; let open = 0; for (const s of this.shelves) if (s.unlocked) open++; const maxC = 4 + open * 2 + Math.floor(this.level / 2);
+      if (this.customers.length >= maxC) { this.spawnTimer = .5; return; } const base = Math.max(.9, 3.2 - this.level * .12); this.spawnTimer = base * (this.frenzy > 0 ? .55 : 1) * (.75 + Math.random() * .5); this.spawnCustomer(); }
+    spawnCustomer() { const open = this.shelves.filter((s) => s.unlocked); if (!open.length) return; const shelf = open[(Math.random() * open.length) | 0]; const vip = this.level >= 3 && Math.random() < .08;
+      const { g, body } = makePerson(vip ? 0xffd93d : this.palette[(Math.random() * this.palette.length) | 0]); if (vip) body.material = this.matVip;
+      // Shopping cart basket for customers
+      const cart = box(.7, .35, .5, 0xc7d2fe); cart.position.set(0, .6, .45); g.add(cart);
+      const want = vip ? 3 : 1 + ((Math.random() * 3) | 0); const bubble = sprite(bubbleTex((vip ? '👑' : '') + KINDS[shelf.kind].emoji + 'x' + want), vip ? 2.3 : 1.9, vip ? 1.15 : .95); bubble.position.y = 2.1; g.add(bubble);
+      g.add(blobShadow(1.35)); g.position.set(3.5 + Math.random() * 2, 0, 13.5); this.scene.add(g);
+      this.customers.push({ group: g, body, bubble, cart, state: 'toShelf', kind: shelf.kind, want, have: 0, patience: 26, vip, target: new THREE.Vector3(shelf.pos.x + 2.3, 0, shelf.pos.z + (Math.random() - .5) * 2.4), timer: 0, checkout: 0, queueIdx: -1, waitTime: 0, bob: Math.random() * 6, stack: [], shelf }); }
+    queuePos(i, out) { return i === 0 ? out.set(this.counterPos.x, 0, this.counterPos.z + 1.6) : out.set(this.counterPos.x - .2, 0, this.counterPos.z + 1.6 + i * 1.25); }
+    updateCustomers(dt) { const cs = this.customers; let q = 0; for (const c of cs) if (c.state === 'queue' || c.state === 'toQueue') c.queueIdx = q++; const here = this.near(this.registerSpot.x, this.registerSpot.z, 2.3);
+      for (let i = cs.length - 1; i >= 0; i--) { const c = cs[i]; c.bob += dt * 11; if (c.state === 'toQueue' || c.state === 'queue') this.queuePos(c.queueIdx, c.target);
+        const dx = c.target.x - c.group.position.x, dz = c.target.z - c.group.position.z, d = Math.hypot(dx, dz), moving = d > .1;
+        if (moving) { const step = Math.min(d, (c.state === 'leaving' ? 4.6 : 3.4) * dt); c.group.position.x += dx / d * step; c.group.position.z += dz / d * step; let a = Math.atan2(dx, dz) - c.group.rotation.y; while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; c.group.rotation.y += a * Math.min(1, 14 * dt); c.group.position.y = Math.abs(Math.sin(c.bob)) * .1; }
+        else c.group.position.y *= .82;
+        if (c.state === 'toShelf') { if (!moving) c.state = 'shopping'; }
+        else if (c.state === 'shopping') { c.group.rotation.y = -Math.PI / 2; c.timer -= dt;
+          if (c.shelf.items > 0 && c.timer <= 0) { c.shelf.items--; c.have++; c.timer = .3; c.shelf.pop = .55; this.updateShelfMeshes(c.shelf); const m = new THREE.Mesh(this.geoItem, this.matKinds[c.kind]); m.position.y = 1.45 + (c.have - 1) * .32; m.castShadow = true; c.group.add(m); c.stack.push(m);
+            setSpriteMap(c.bubble, bubbleTex((c.vip ? '👑' : '') + KINDS[c.kind].emoji + 'x' + (c.want - c.have))); c.bubble.position.y = 2.1 + c.have * .32; this.particles.burst(c.group.position.x, 1.5, c.group.position.z, 3, KINDS[c.kind].color, { speed: 1.4, up: 2.4, size: .1, life: .35 });
+            if (c.have >= c.want) { c.state = 'toQueue'; setSpriteMap(c.bubble, iconTex('💵', '#fff', 92)); c.bubble.scale.set(1.1, 1.1, 1); c.patience = 26; } }
+          else if (c.shelf.items === 0) { c.patience -= dt; if (c.patience <= 0) this.leave(c, false); } }
+        else if (c.state === 'toQueue') { if (!moving) { c.state = 'queue'; c.patience = 26; } }
+        else if (c.state === 'queue') { c.group.rotation.y = Math.PI;
+          if (c.queueIdx === 0 && !moving) { const rate = here ? 1 / .38 : this.cashierSpeed;
+            if (rate > 0) { c.checkout += dt * rate; const done = Math.floor(c.checkout);
+              while (c.stack.length > c.want - done && c.stack.length > 0) { const m = c.stack.pop(); c.group.remove(m); c.bubble.position.y = 2.1 + c.stack.length * .32; this.spawnBill(this.counterPos.x, 1.7, this.counterPos.z - .6, KINDS[c.kind].price * (this.frenzy > 0 ? 2 : 1) * (c.vip ? 3 : 1)); }
+              if (c.checkout >= c.want) this.completeSale(c, here); }
+            else { c.waitTime += dt; c.patience -= dt; if (c.patience <= 0) this.leave(c, false); } }
+          else c.waitTime += dt; }
+        else if (!moving) { this.scene.remove(c.group); cs.splice(i, 1); } } }
+    completeSale(c, byPlayer) { if (byPlayer && c.waitTime < 3) { this.combo = Math.min(this.combo + 1, 99); this.comboTimer = 7; const tip = Math.round(KINDS[c.kind].price * c.want * .12 * Math.min(this.combo, 6)) + 1; this.spawnBill(this.counterPos.x, 1.8, this.counterPos.z - .6, (this.frenzy > 0 ? 2 : 1) * tip, true);
+        if (this.combo >= 3) this.ftext.spawn('COMBO x' + this.combo, c.group.position.x, 3.2, c.group.position.z, '#7ef7c0', .9); this.progress('combo', this.combo, true); } else if (byPlayer) this.combo = 0;
+      if (byPlayer) { this.personalSales++; this.progress('personal', 1); } this.served++; this.lifetime.served++; this.progress('serve', 1);
+      this.addXp(4 + c.want * 2 + c.kind * 5 + (c.vip ? 10 : 0)); this.shake(.2); this.particles.burst(this.counterPos.x, 1.5, this.counterPos.z, 10, [0x53c66f, 0xffe45c, 0xffffff], { speed: 3, up: 4.5, size: .15, life: .7 }); sfx.sale(); buzz(10);
+      if (c.vip) this.ftext.spawn('VIP BONUS x3', c.group.position.x, 2.8, c.group.position.z, '#ffd93d', 1); if (this.tutorialStep === 2) { this.tutorialStep = 3; this.pushHud(); } this.leave(c, true); }
+    leave(c, happy) { c.state = 'leaving'; for (const m of c.stack) c.group.remove(m); c.stack = []; c.target.set(3 + Math.random() * 3, 0, 15);
+      // Satisfying customer exit emotes
+      setSpriteMap(c.bubble, iconTex(happy ? (c.vip ? '😍' : '🥰') : '😡', '#fff', 92)); c.bubble.scale.set(1.1, 1.1, 1); c.bubble.position.y = 2.1; if (!happy) this.combo = 0; }
+    addXp(n) { this.xp += n; while (this.xp >= XP_FOR(this.level)) { this.xp -= XP_FOR(this.level); this.level++; this.shake(.5); this.ftext.spawn('LEVEL ' + this.level + '!', this.ppos.x, 3, this.ppos.z, '#ffd93d', 1.3);
+        this.particles.burst(this.ppos.x, 1.2, this.ppos.z, 34, [0xffd93d, 0xff8fb1, 0x7ec8f0, 0xffffff], { speed: 5, up: 7, size: .2, life: 1.1 }); sfx.levelUp(); buzz([30, 50, 30]); toast(`Level ${this.level}! More customers are coming`, '🎉', true);
+        if (this.level === 3 && this.porter && !this.porter.visible) { this.porter.visible = true; this.porterSpeed = 2.8; toast('Helper Porter unlocked! He stocks shelves for you.', '🤖', true); } } }
+
+    /* ---- bills ---- */
+    spawnBill(x, y, z, value, big = false) { value = Math.max(1, Math.round(value * this.starMult)); let m = this.billPool.pop(); if (!m) { m = new THREE.Mesh(this.geoBill, this.matBill); m.castShadow = true; }
+      m.scale.setScalar(big ? 1.5 : 1); m.position.set(x + (Math.random() - .5) * .5, y, z + (Math.random() - .5) * .5); m.rotation.set(Math.random(), Math.random() * 6, Math.random()); this.scene.add(m);
+      this.bills.push({ mesh: m, vel: new THREE.Vector3((Math.random() - .5) * 3.2, 4.2 + Math.random() * 2, -1.4 - Math.random() * 2.2), value, landed: false, life: 0 }); }
+    updateBills(dt) { for (let i = this.bills.length - 1; i >= 0; i--) { const b = this.bills[i]; b.life += dt; const m = b.mesh; const dx = this.ppos.x - m.position.x, dz = this.ppos.z - m.position.z, dist = Math.hypot(dx, dz);
+        if (!b.landed) { b.vel.y -= 16 * dt; m.position.addScaledVector(b.vel, dt); m.rotation.x += dt * 8; m.rotation.z += dt * 5; if (m.position.y <= .08) { m.position.y = .08; m.rotation.set(-Math.PI / 2, 0, Math.random() * 6); b.landed = true; } }
+        else { if (dist < 5.5 && dist > .001) { const pull = (1 - dist / 5.5) * 34 + 6; m.position.x += dx / dist * pull * dt; m.position.z += dz / dist * pull * dt; m.position.y = .08 + Math.sin(this.time * 12) * .05; }
+          if (dist < .95) { this.addMoney(b.value); this.ftext.spawn('+$' + b.value, m.position.x, 1.8, m.position.z, '#7ef7c0', .8); this.particles.burst(m.position.x, .6, m.position.z, 4, [0x53c66f, 0xffe45c], { speed: 2, up: 3.2, size: .11, life: .45 }); sfx.coin(); this.scene.remove(m); this.billPool.push(m); this.bills.splice(i, 1); continue; } }
+        if (b.life > 25) { this.addMoney(b.value); this.scene.remove(m); this.billPool.push(m); this.bills.splice(i, 1); } } }
+
+    /* ---- upgrades ---- */
+    refreshPads() { for (const p of this.pads) { let open = !p.bought; if (open && p.req) { const r = this.pads.find((q) => q.id === p.req); open = !!r && r.bought; } p.visible = open; p.group.visible = open; } }
+    updatePads(dt) { for (const p of this.pads) { if (!p.visible || this.money <= 0 || p.paid >= p.cost || !this.near(p.pos.x, p.pos.z, 1.4)) continue;
+        const amt = Math.min(this.money, p.cost - p.paid, Math.max(26, p.cost * .85) * dt); if (amt > 0) { this.money -= amt; p.paid += amt; if (Math.random() < .45) { this.particles.burst(p.pos.x, .5, p.pos.z, 1, 0x53c66f, { speed: 1.6, up: 3.4, size: .13, life: .5 }); if (Math.random() < .4) sfx.stock(); }
+          const f = p.paid / p.cost; p.fill.scale.set(Math.max(.001, f), 1, Math.max(.001, f)); p.dl.draw(p.label, '$' + Math.ceil(p.cost - p.paid)); }
+        if (p.paid >= p.cost - .01) this.buy(p); } }
+    buy(p) { p.bought = true; p.paid = p.cost; this.money = Math.max(0, this.money); this.upgradesBought++; this.shake(.55); this.particles.burst(p.pos.x, .7, p.pos.z, 36, [0xffd93d, 0x53c66f, 0xffffff, 0x7ec8f0, 0xff8fb1], { speed: 5, up: 7, size: .2, life: 1.1 });
+      this.ftext.spawn('UNLOCKED!', p.pos.x, 2.4, p.pos.z, '#7ef7c0', 1.15); this.unlockName = p.label; this.unlockTimer = 2.4; this.addXp(30); sfx.unlock(); buzz([20, 40, 20]); this.applyUpgrade(p.id, false); this.progress('unlock', 1);
+      if (this.tutorialStep === 3) this.tutorialStep = 4; this.refreshPads(); this.pushHud(); this.save(); }
+    applyUpgrade(id, silent) { const unlockPlots = (kind, n) => { let k = 0; for (const pl of this.plots) { if (pl.kind !== kind || pl.unlocked || k >= n) continue; pl.unlocked = true; pl.group.visible = true; pl.growth = silent ? 1 : .55; pl.pop = 1; if (!silent) this.particles.burst(pl.pos.x, .7, pl.pos.z, 10, [KINDS[kind].leaf, 0x8a5a38], { speed: 3, up: 4.2 }); k++; } };
+      const openShelf = (kind) => { const s = this.shelves[kind]; s.unlocked = true; s.group.visible = true; s.pop = 1; this.updateShelfMeshes(s); };
+      switch (id) { case 't2': unlockPlots(0, 2); break; case 't3': unlockPlots(0, 4); break; case 'corn': openShelf(1); unlockPlots(1, 3); break; case 'corn2': unlockPlots(1, 6); break; case 'melon': openShelf(2); unlockPlots(2, 3); break; case 'melon2': unlockPlots(2, 4); break;
+        case 'bag1': this.carryMax = 14; break; case 'bag2': this.carryMax = 22; break; case 'bag3': this.carryMax = 34; break; case 'boots': this.speed = 7.6; break; case 'boots2': this.speed = 9.2; break; case 'fert': for (const k of KINDS) k.grow = k.baseGrow * .5; break;
+        case 'cashier': { if (!this.cashier) { const { g } = makePerson(0x9be36f); const cap = box(.5, .18, .5, 0xffffff); cap.position.y = 1.32; g.add(cap); g.position.set(this.counterPos.x + 1.5, 0, this.counterPos.z - 1.4); g.rotation.y = Math.PI; this.scene.add(g); this.cashier = g; } this.cashierSpeed = 1 / 1.25; break; }
+        case 'cashier2': this.cashierSpeed = 1 / .5; if (this.cashier) this.cashier.children[0].material = new THREE.MeshStandardMaterial({ color: 0xc79bff, roughness: .6 }); break; }
+      this.updateCarryMeshes(); }
+
+    /* ---- visuals ---- */
+    animate(dt) { const t = this.time; this.player.position.copy(this.ppos); this.player.rotation.y = this.pyaw; const sp = Math.hypot(this.pvel.x, this.pvel.z), run = Math.min(1, sp / 5.5);
+      this.player.position.y = Math.abs(Math.sin(t * 15)) * .11 * run; this.playerShadow.position.y = .04 - this.player.position.y; const shS = 1 - this.player.position.y * .7; this.playerShadow.scale.set(shS, shS, 1);
+      this.squash = Math.max(0, this.squash - dt * 6); const sq = 1 + Math.sin(this.squash * Math.PI) * .2; this.playerBody.scale.set(1 / sq, sq, 1 / sq); this.player.rotation.x = run * .06;
+      this.tmp.set(-this.pvel.x, 0, -this.pvel.z).applyAxisAngle(this.yAxis, -this.pyaw);
+      for (let i = 0; i < this.carryMeshes.length; i++) { const m = this.carryMeshes[i]; if (!m.visible) continue; const k = (i + 1) * .018; m.position.x = this.tmp.x * k + Math.sin(t * 13 + i * .5) * .012 * i * run; m.position.z = this.tmp.z * k; m.rotation.z = -this.tmp.x * k * .9; m.rotation.x = this.tmp.z * k * .9; }
+      // Wind sway on crops
+      const wind = Math.sin(t * 3.5) * 0.08;
+      for (const p of this.plots) { if (!p.unlocked) continue; const g = p.growth, ripe = g >= 1; p.pop = Math.max(0, p.pop - dt * 3); const popS = 1 + Math.sin(p.pop * Math.PI) * .3, base = .3 + g * .7, wob = ripe ? 1 + Math.sin(t * 5 + p.pos.x) * .04 : 1;
+        p.crop.scale.set(base * wob * popS, base * popS, base * wob * popS);
+        p.crop.rotation.z = wind * (ripe ? 1.2 : 0.6);
+        const fs = ripe ? 1 : Math.max(.001, (g - .45) * 1.9); for (const f of p.fruits) f.scale.setScalar(fs); p.ring.material.opacity = ripe ? .4 + Math.sin(t * 5) * .2 : .1; p.ring.scale.setScalar(ripe ? 1 + Math.sin(t * 5) * .05 : .9); }
+      for (const s of this.shelves) { if (!s.unlocked) continue; s.pop = Math.max(0, s.pop - dt * 4); const k = 1 + Math.sin(s.pop * Math.PI) * .07; s.group.scale.set(k, 2 - k, k); const want = s.items < s.max && this.carry.indexOf(s.kind) >= 0; s.ring.material.opacity = want ? .4 + Math.sin(t * 7) * .2 : .12; if (s.emptyIcon.visible) s.emptyIcon.position.y = 2 + Math.sin(t * 6) * .12; }
+      const rich = this.money > 0; for (const p of this.pads) { if (!p.visible) continue; p.base.material = rich ? this.padMatOn : this.padMatOff; p.glow.material.opacity = rich ? .3 + Math.sin(t * 6) * .18 : .08; p.sprite.position.y = 2.25 + Math.sin(t * 2.6 + p.pos.x) * .1; }
+      let busy = false; for (const c of this.customers) if (c.state === 'queue' && c.queueIdx === 0) { busy = true; break; }
+      if (this.cashier) { this.cashierBob += dt * (busy ? 12 : 3); this.cashier.position.y = Math.abs(Math.sin(this.cashierBob)) * .07; }
+      const needsMe = busy && this.cashierSpeed === 0; this.registerRing.material.opacity = needsMe ? .45 + Math.sin(t * 8) * .2 : .16;
+      for (const c of this.customers) if (c.state === 'shopping' || c.state === 'queue') c.body.scale.y = 1 + Math.sin(c.bob * .55) * .035;
+      let at = null; if (this.phase === 'playing') { if (this.tutorialStep === 0) { let ripe = null; for (const p of this.plots) if (p.unlocked && p.growth >= 1) { ripe = p; break; } at = ripe ? ripe.pos : this.plots[0].pos; }
+        else if (this.tutorialStep === 1) at = this.shelves[0].pos; else if (this.tutorialStep === 2) at = this.registerSpot; else if (this.tutorialStep === 3) { for (const p of this.pads) if (p.visible) { at = p.pos; break; } } else if (needsMe) at = this.registerSpot; }
+      this.arrow.visible = !!at; if (at) { this.arrow.position.set(at.x, 3.1 + Math.sin(t * 5) * .28, at.z); this.arrow.rotation.y = t * 2.2; }
+      for (const cg of this.clouds) { cg.userData.a += dt * .006; cg.position.x = Math.cos(cg.userData.a) * 60; cg.position.z = Math.sin(cg.userData.a) * 60; }
+      this.particles.update(dt); this.ftext.update(dt); }
+    dayNight() { const cyc = (this.playTime % 600) / 600; const night = clamp(-Math.sin(cyc * Math.PI * 2 - .35), 0, 1); const n = night * night;
+      this.sun.intensity = 2 - n * 1.45; this.sun.color.setHex(0xfff4d6).lerp(this.colA.setHex(0xffb070), n * .6); this.hemi.intensity = .9 - n * .45; this.shopLight.intensity = n * 90;
+      this.skyMat.uniforms.top.value.setHex(0x3fa9f5).lerp(this.colA.setHex(0x1a2a5e), n); this.skyMat.uniforms.mid.value.setHex(0xa9e4ff).lerp(this.colA.setHex(0x5b4a8a), n * .9); this.skyMat.uniforms.bot.value.setHex(0xeafbff).lerp(this.colA.setHex(0xffa070), n * .8);
+      this.scene.fog.color.setHex(0xbfeaff).lerp(this.colA.setHex(0x3c3560), n); this.cloudMat.opacity = .9 - n * .5; }
+    updateCamera(dt) { const idle = this.phase === 'idle'; if (idle) this.camLook.set(-1, 0, 1); else { this.tmp2.set(this.pvel.x, 0, this.pvel.z).multiplyScalar(.28); this.camLook.set(this.ppos.x + this.tmp2.x, 0, this.ppos.z + this.tmp2.z); }
+      this.camTarget.lerp(this.camLook, 1 - Math.pow(.0015, dt)); this.trauma = Math.max(0, this.trauma - dt * 2); const sh = this.trauma * this.trauma * .5, t = this.time;
+      const ox = (Math.sin(t * 59) + Math.sin(t * 97)) * sh * .5, oy = Math.cos(t * 43) * sh, oz = Math.sin(t * 51) * sh * .6, rot = Math.sin(t * 71) * sh * .02;
+      const aspect = innerWidth / Math.max(1, innerHeight); const zm = settings.zoom === 'near' ? .85 : settings.zoom === 'far' ? 1.2 : 1;
+      const zoom = clamp(1.55 - aspect * .42, .95, 1.62) * (idle ? 1.28 : 1) * zm; const h = 16 * zoom, back = 13 * zoom;
+      this.camera.position.set(this.camTarget.x + ox + (idle ? Math.sin(t * .25) * 3 : 0), h + oy, this.camTarget.z + back + oz); this.camera.up.set(Math.sin(rot), Math.cos(rot), 0); this.camera.lookAt(this.camTarget.x + ox, .7 + oy, this.camTarget.z + oz); }
+
+    /* ---- minimap radar ---- */
+    drawMinimap() {
+      if (!settings.map || !this.minimapCtx || this.phase !== 'playing') return;
+      const ctx = this.minimapCtx, w = 90, h = 90;
+      ctx.clearRect(0, 0, w, h);
+      // Map world coords [-15..15] to canvas [0..90]
+      const toM = (wx, wz) => ({ x: ((wx + 15) / 30) * w, y: ((wz + 10) / 22) * h });
+      // Farm zone
+      ctx.fillStyle = 'rgba(154, 211, 121, 0.4)';
+      ctx.fillRect(0, 0, w * 0.45, h);
+      // Shop zone
+      ctx.fillStyle = 'rgba(253, 243, 227, 0.4)';
+      ctx.fillRect(w * 0.45, 0, w * 0.55, h);
+      // Plots
+      for (const p of this.plots) {
+        if (!p.unlocked) continue;
+        const pt = toM(p.pos.x, p.pos.z);
+        ctx.fillStyle = p.growth >= 1 ? '#22c55e' : '#64748b';
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2); ctx.fill();
+      }
+      // Shelves
+      for (const s of this.shelves) {
+        if (!s.unlocked) continue;
+        const pt = toM(s.pos.x, s.pos.z);
+        ctx.fillStyle = s.items > 0 ? '#38bdf8' : '#ef4444';
+        ctx.fillRect(pt.x - 3, pt.y - 2, 6, 4);
+      }
+      // Counter
+      const cp = toM(this.counterPos.x, this.counterPos.z);
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(cp.x - 3, cp.y - 2, 6, 4);
+      // Customers
+      ctx.fillStyle = '#f472b6';
+      for (const c of this.customers) {
+        const pt = toM(c.group.position.x, c.group.position.z);
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, 2, 0, Math.PI * 2); ctx.fill();
+      }
+      // Helper Porter
+      if (this.porter && this.porter.visible) {
+        const pt = toM(this.porterPos.x, this.porterPos.z);
+        ctx.fillStyle = '#06b6d4';
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, 3, 0, Math.PI * 2); ctx.fill();
+      }
+      // Player
+      const pp = toM(this.ppos.x, this.ppos.z);
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#2b2140';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(pp.x, pp.y, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+
+    /* ---- HUD ---- */
+    pushHud() { const m = Math.floor(this.money); if (this._lastMoney !== undefined && m > this._lastMoney) retrigger($('moneyChip'), 'bump'); this._lastMoney = m; setText($('moneyTxt'), '$' + money(m));
+      $('starChip').classList.toggle('hidden', this.stars <= 0); setText($('starTxt'), this.stars); setText($('starPct'), this.stars * 5);
+      const kind = this.carry.length ? this.carry[this.carry.length - 1] : -1; setText($('carryIcon'), kind >= 0 ? KINDS[kind].emoji : '🎒'); setText($('carryTxt'), this.carry.length + '/' + this.carryMax); setText($('servedTxt'), this.served);
+      setText($('lvlNum'), this.level); $('xpBar').style.width = Math.min(100, this.xp / Math.max(1, XP_FOR(this.level)) * 100) + '%'; setText($('bestTxt'), money(bestCache));
+      $('frenzyBanner').classList.toggle('hidden', !(this.frenzy > 0)); if (this.frenzy > 0) setText($('frenzyTime'), Math.ceil(this.frenzy));
+      const showCombo = this.combo >= 3; if (showCombo !== this._combo) { $('comboBanner').classList.toggle('hidden', !showCombo); this._combo = showCombo; } if (showCombo && this._comboN !== this.combo) { this._comboN = this.combo; setText($('comboNum'), this.combo); retrigger($('comboBanner').firstElementChild, 'popin'); }
+      const showUnlock = this.unlockTimer > 0; if (showUnlock !== this._unlock) { $('unlockBanner').classList.toggle('hidden', !showUnlock); this._unlock = showUnlock; if (showUnlock) { setText($('unlockName'), this.unlockName || ''); for (const el of $('unlockBanner').children) retrigger(el, 'popin'); } }
+      const tuts = ['Walk onto the red tomatoes to pick them 🍅', 'Carry them to the shelf and walk into it 🧺', 'Stand on the blue circle at the checkout 💵', 'Walk onto a white pad to buy upgrades ⭐', null]; const tut = tuts[Math.min(this.tutorialStep, 4)];
+      if (tut !== this._tut) { this._tut = tut; $('tutWrap').classList.toggle('hidden', !tut); if (tut) { setText($('tutTxt'), tut); retrigger($('tutTxt'), 'popin'); } }
+      if (this.missionsDirty) this.renderMissions();
+      $('minimap').style.display = settings.map ? 'block' : 'none'; }
+  }
+
+  /* ====================================================================
+     UI wiring
+     ==================================================================== */
+  const ui = { list: ['loader', 'start', 'pause', 'wardrobe', 'settings', 'missions', 'over', 'fatal'], current: '', from: '',
+    show(name) { this.current = name; for (const s of this.list) $('s-' + s).classList.toggle('hidden', s !== name); const g = window.__game; $('hud').classList.toggle('hidden', !g || g.phase === 'idle' || g.phase === 'over'); } };
+  const game = new Game($('game')); window.__game = game;
+  document.documentElement.style.setProperty('--js', settings.joy === 'large' ? '150px' : '120px');
+
+  function renderWardrobe() {
+    const el = $('outfitList');
+    el.innerHTML = OUTFITS.map((o) => {
+      const unlocked = !o.check || o.check(game);
+      const isCurrent = currentOutfit === o.id;
+      return `<div class="outfitCard${isCurrent ? ' active' : ''}${unlocked ? '' : ' locked'}" data-id="${o.id}">
+        <div class="outfitIcon">${o.icon}</div>
+        <div class="outfitName">${o.name}</div>
+        <div class="outfitReq">${unlocked ? (isCurrent ? '✓ Equipped' : 'Available') : '🔒 ' + o.req}</div>
+      </div>`;
+    }).join('');
+    for (const card of el.querySelectorAll('.outfitCard')) {
+      card.onclick = () => {
+        const id = card.dataset.id;
+        const o = OUTFITS.find((x) => x.id === id);
+        if (o.check && !o.check(game)) { toast(`Locked: ${o.req}`, '🔒'); buzz(30); return; }
+        game.applyOutfit(id); renderWardrobe();
+      };
+    }
+  }
+
+  function refreshStart() { const d = store.get(KEYS.save, null); const has = !!d && d.v === 2 && (d.level > 1 || d.money > 0 || d.earned > 0 || (d.bought && d.bought.length)); $('continueBtn').classList.toggle('hidden', !has); $('newBtn').classList.toggle('hidden', !has); $('startBtn').classList.toggle('hidden', has);
+    if (has) { $('saveSummary').classList.remove('hidden'); $('saveSummary').innerHTML = `💾 Saved shop: <b>Level ${d.level}</b> · <b>$${money(d.money)}</b> in the till · ${d.bought ? d.bought.length : 0} upgrades${d.stars ? ` · ⭐ ${d.stars}` : ''}`; } else $('saveSummary').classList.add('hidden');
+    if (d) game.loadMeta(d); const pre = loadScores(); $('startScoresWrap').classList.toggle('hidden', !pre.length); if (pre.length) renderScores($('startScores'), pre.slice(0, 5)); bestCache = pre.length ? pre[0].score : 0; }
+  $('nameInput').value = store.get(KEYS.name, '') || 'Shopkeeper'; refreshStart(); ui.show('start');
+  const nameSave = () => store.set(KEYS.name, ($('nameInput').value || 'Shopkeeper').trim().slice(0, 14) || 'Shopkeeper');
+  $('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ($('continueBtn').classList.contains('hidden') ? $('startBtn') : $('continueBtn')).click(); } });
+  $('startBtn').onclick = () => { nameSave(); game.startNew(); };
+  $('continueBtn').onclick = () => { nameSave(); const d = store.get(KEYS.save, null); if (d) game.continueFrom(d); else game.startNew(); };
+  $('newBtn').onclick = () => modal({ icon: '🆕', title: 'Start a new shop?', body: 'Your current saved shop will be replaced. Your ⭐ stars and high scores are kept.', buttons: [{ label: 'Yes, start fresh', primary: true, onClick: () => { nameSave(); game.startNew(); } }, { label: 'Cancel' }] });
+  $('pauseBtn').onclick = () => game.togglePause(); $('resumeBtn').onclick = () => game.resume(); $('cashoutBtn').onclick = () => game.cashOut();
+  $('againBtn').onclick = () => game.startNew();
+  $('missionsBtn').onclick = $('missionsBtn2').onclick = () => { if (game.phase === 'playing') game.pause(); game.renderMissions(); ui.show('missions'); };
+  $('missionsBack').onclick = () => ui.show('pause');
+  const openWardrobe = (from) => { ui.from = from; renderWardrobe(); ui.show('wardrobe'); };
+  $('wardrobeBtn').onclick = () => { if (game.phase === 'playing') game.pause(); openWardrobe('pause'); };
+  $('wardrobeBtn1').onclick = () => openWardrobe('start');
+  $('wardrobeBtn2').onclick = () => openWardrobe('pause');
+  $('wardrobeBack').onclick = () => ui.show(ui.from || 'pause');
+  const openSettings = (from) => { ui.from = from; syncSettings(); ui.show('settings'); };
+  $('settingsBtn1').onclick = () => openSettings('start'); $('settingsBtn2').onclick = () => openSettings('pause');
+  $('settingsBack').onclick = () => { saveSettings(); ui.show(ui.from || 'start'); };
+  $('resetBtn').onclick = () => modal({ icon: '🗑', title: 'Erase all data?', body: 'This deletes your saved shop, stars, settings and high scores on this device. This cannot be undone.', buttons: [{ label: 'Erase everything', danger: true, onClick: () => { for (const k of Object.values(KEYS)) store.del(k); location.reload(); } }, { label: 'Cancel' }] });
+  function syncSettings() { $('optSound').checked = !!settings.sound; $('optHaptics').checked = !!settings.haptics; $('optShake').checked = !!settings.shake; $('optMap').checked = !!settings.map;
+    for (const [id, key] of [['optQuality', 'quality'], ['optZoom', 'zoom'], ['optJoy', 'joy']]) for (const b of $(id).querySelectorAll('button')) b.classList.toggle('on', b.dataset.v === settings[key]); }
+  $('optSound').onchange = (e) => { settings.sound = e.target.checked; if (settings.sound) { sfx.resume(); sfx.ui(); } saveSettings(); };
+  $('optHaptics').onchange = (e) => { settings.haptics = e.target.checked; buzz(20); saveSettings(); };
+  $('optShake').onchange = (e) => { settings.shake = e.target.checked; saveSettings(); };
+  $('optMap').onchange = (e) => { settings.map = e.target.checked; saveSettings(); };
+  for (const [id, key] of [['optQuality', 'quality'], ['optZoom', 'zoom'], ['optJoy', 'joy']]) $(id).addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; settings[key] = b.dataset.v; saveSettings(); syncSettings(); sfx.ui();
+    if (key === 'quality') game.quality.reset(); if (key === 'joy') document.documentElement.style.setProperty('--js', settings.joy === 'large' ? '150px' : '120px'); });
+  game.input.onPause = () => { if (game.phase === 'playing') game.pause(); else if (game.phase === 'paused' && ui.current === 'pause') game.resume(); };
+  game.input.onJoystick = (vis, ox, oy, dx, dy) => { const j = $('joy'); if (!vis) { j.classList.add('hidden'); return; } const S = settings.joy === 'large' ? 150 : 120, K = S * .43, f = (S / 2 - K / 2) / game.input.R;
+    j.classList.remove('hidden'); j.style.left = (ox - S / 2) + 'px'; j.style.top = (oy - S / 2) + 'px'; const kn = $('joyKnob'); kn.style.left = (S / 2 - K / 2 + dx * f) + 'px'; kn.style.top = (S / 2 - K / 2 + dy * f) + 'px'; };
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
+  document.addEventListener('pointerdown', () => sfx.resume(), { once: true, passive: true });
+  for (const el of document.querySelectorAll('.screen')) el.addEventListener('pointerdown', (e) => e.stopPropagation());
+  document.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('button'); if (b) { b.blur(); if (settings.sound) sfx.ui(); } });
+  console.log('%cMini Mart 3D v' + VERSION + ' ready (AAA)', 'color:#53c66f;font-weight:bold');
+}
+</script>
+</body>
+</html>
